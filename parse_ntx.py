@@ -92,7 +92,7 @@ def convertColor(arr, format):
 def saveMip(mip, fName):
 	bytes = convertColor(mip["data"], mip["Format"])
 	size = (mip["Width"], mip["Height"])
-	image = PIL.Image.frombytes("RGBA", size, bytes)
+	image = PIL.Image.frombytes("RGBA", size, bytes).transpose(Image.FLIP_TOP_BOTTOM)
 	image.save(fName)
 
 def convert(f):

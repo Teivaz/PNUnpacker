@@ -124,7 +124,11 @@ def parseTag(tag, f):
 def readTag(f):
 	tag = struct.unpack("4c", f.read(4))
 	tag = "".join(tag)[::-1]
-	parseTag(tag, f)
+	pos = f.tell()
+	try:
+		parseTag(tag, f)
+	except:
+		print("exception at {} - {}".format(tag, hex(pos)))
 
 def parse(f):
 
