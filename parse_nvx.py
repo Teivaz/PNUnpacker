@@ -145,6 +145,7 @@ def parsIndexArray(f, NumIndices):
 		Indices.append(index)
 	return Indices
 
+# do not use this method
 def parsIndexTris(f, NumTris):
 	Indices = []
 	for i in range(NumTris / 3):
@@ -175,6 +176,16 @@ def indicesToTriangleStrip(indices):
 			print("{:3} {:3} {:3}".format(index[0], index[1], index[2]))
 	return result
 
+def parseQuads(f, NumQuads):
+	result = []
+	for i in range(NumQuads):
+		quad = struct.unpack("<HHHH", f.read(4*2))
+		quad = (quad[0], quad[1], quad[2], quad[3])
+		result.append(quad)
+		if VERBOSITY > 1:
+			print("{:3} {:3} {:3} {:3}".format(quad[0], quad[1], quad[2], quad[3]))
+	return result
+
 def convert(f):
 	footprint = readInt(f)
 	if 0x4e565831 != footprint:
@@ -182,7 +193,7 @@ def convert(f):
 
 	NumVerts = readInt(f)
 	NumIndices = readInt(f)
-	_a = readInt(f)
+	NumQuads = readInt(f)
 	Format = readInt(f)
 	#Format = readBits(_b, 2, 0)
 	#_c = readBits(_b, 30, 2)
@@ -190,16 +201,16 @@ def convert(f):
 	dataSize = readInt(f)
 
 	if ANALYZE_ONLY:
-		return "{}, {}, {}, {}".format(Format, NumIndices, _a, NumVerts)
+		return "{}, {}, {}, {}".format(Format, NumIndices, NumQuads, NumVerts)
 
 
-	print("Format: {4} Verts: {0} Indices: {1}. Data: {2}, size: {3}".format(NumVerts, NumIndices, dataOffset, dataSize, Format))
-	print(">> ", _a)
+	print("Format: {4} Verts: {0} Indices: {1} Quads: {5}. Data: {2}, size: {3}".format(NumVerts, NumIndices, dataOffset, dataSize, Format, NumQuads))
 
 	Vertices = []
 	Normals = []
 	Uvs = []
 	Indices = []
+	Quads = []
 
 	f.seek(dataOffset)
 
@@ -209,7 +220,7 @@ def convert(f):
 	elif Format == FORMAT_MODEL:
 		(Vertices, Normals, Uvs) = parseModelVertices(f, NumVerts)
 		#Indices = parsIndexTris(f, NumIndices)
-		f.read(_a*2*4)
+		Quads = parseQuads(f, NumQuads)
 		Indices = parsIndexArray(f, NumIndices)
 		Indices = indicesToTriangles(Indices)
 		#Indices = indicesToTriangleStrip(Indices)
