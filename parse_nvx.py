@@ -1,254 +1,250 @@
 import struct, os
-#from FbxCommon import *
 
-if 0:
-	PATH = "_data.npk"
-else:	
-	PATH = "viewer"
-VERBOSITY = 1
-
-ANALYZE_ONLY = 0
+''' Script settings '''
+VERBOSITY = 2
+USE_DEVELOPEMENT_FOLDER = True
+ANALYZE_ONLY = False
 
 
-FORMAT_UNKNOWN_1 = 1     # 0b00000001 - 1
+if USE_DEVELOPEMENT_FOLDER:
+	PATH = "nvx"
+else:
+	PATH = "../_data.npk"
+
+
+''' Format Defines '''
+
+''' Known formats '''
+FORMAT_COLLISION = 1
+#FORMAT_MESH = 3
+FORMAT_MODEL = 11
+
+''' All Formats '''
+FORMAT_UNKNOWN_1 = 1     # 0b00000001 - FORMAT_COLLISION
 FORMAT_UNKNOWN_5 = 5     # 0b00000101 - 5
 FORMAT_UNKNOWN_121 = 121 # 0b01111001 - 121
 FORMAT_UNKNOWN_3 = 3     # 0b00000011 - 3
-FORMAT_UNKNOWN_11 = 11   # 0b00001011 - 11
-FORMAT_UNKNOWN_27 = 27   # 0b00011011 - 27
-FORMAT_UNKNOWN_139 = 139 # 0b10001011 - 139
+FORMAT_UNKNOWN_11 = 11   # 0b00001011 - FORMAT_MODEL
+FORMAT_UNKNOWN_27 = 27   # 0b00011011 - in progress
+FORMAT_UNKNOWN_139 = 139 # 0b10001011 - in progress
 
 FORMAT_UNKNOWN_59 = 59   # 0b00111011 - 59
 FORMAT_UNKNOWN_19 = 19   # 0b00010011 - 19
 FORMAT_UNKNOWN_123 = 123 # 0b01111011 - 123
 
-FORMAT_COLLISION = 1
-#FORMAT_MESH = 3
-FORMAT_MODEL = 11
+''' /Defines '''
+
+class Mesh(object):
+	Format = 0
+	Positions = []
+	Normals = []
+	UVs = []
+	Quads = []
+	Triangles = []
+	NumVerts = 0
+	NumQuads = 0
+	NumIndices = 0
+	DataSize = 0
+
 
 def readInt(f):
 	(r, ) = struct.unpack("<I", f.read(4))
 	return r
-
 def readShort(f):
 	(r, ) = struct.unpack("<H", f.read(2))
 	return r
-
 def readFloat(f):
 	(r, ) = struct.unpack("<f", f.read(4))
 	return r
 
-def readBits(short, num, offset):
-	if offset > 0:
-		short = short >> offset
-	mask = 0xffffffff >> 32-num
-	#print short
-	result = mask & short
-	return int(result)
 
-def parseVertexMesh(f, Vertices):
-	tell = f.tell()
+# Position
+def parseVerticesP(f, mesh):
+	for i in range(mesh.NumVerts):
+		pos = struct.unpack("<fff", f.read(12))
+		mesh.Positions.append(pos)
+		if VERBOSITY > 1:
+			print("{:6.3f} {:6.3f} {:6.3f}".format(pos[0], pos[1], pos[2]))
+	return mesh
 
-	pos = struct.unpack("<fff", f.read(12))
-	norm = struct.unpack("<fff", f.read(12))
-	uv = struct.unpack("<ff", f.read(8))
+# Position, normal, UV
+def parseVerticesPNU(f, mesh):
+	for i in range(mesh.NumVerts):
+		pos = struct.unpack("<fff", f.read(12))
+		norm = struct.unpack("<fff", f.read(12))
+		uv = struct.unpack("<ff", f.read(8))
+		mesh.Positions.append(pos)
+		mesh.Normals.append(norm)
+		mesh.UVs.append(uv)
+		if VERBOSITY > 1:
+			print("{:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f}".
+				format(pos[0], pos[1], pos[2], norm[0], norm[1], norm[2], uv[0], uv[1]))
+	return mesh
 
-	vertex = {"pos": pos, "norm": norm, "uv": uv}
-	if VERBOSITY > 2:
-		print("{0}: {1}".format(hex(tell), vertex))
-	Vertices.append(vertex)
+# 
+def parseVertices139(f, mesh):
+	# skin.nvx
+	for i in range(mesh.NumVerts):
+		pos = struct.unpack("<fff", f.read(12))
+		norm = struct.unpack("<fff", f.read(12))
 
+		a = struct.unpack("<ff", f.read(8))
+		(a1, a2, a3, a4) = struct.unpack("<hhhh", f.read(8))
 
-def parseVertexNorm(f, Vertices):
-	tell = f.tell()
-	pos = struct.unpack("<fff", f.read(12))
-	vertex = {"pos": pos}
-	if VERBOSITY > 2:
-		print("{0}: {1}".format(hex(tell), vertex))
-	Vertices.append(vertex)
+		b = struct.unpack("<ffff", f.read(4*4))
 
-def validateIndex(i, a):
-	if(i[0] == i[1] or i[0] == i[2] or i[1] == i[2]):
-		raise NameError("{0}: index validation failed".format(hex(a)))
+		mesh.Positions.append(pos)
+		mesh.Normals.append(norm)
+		if VERBOSITY > 1:
+			print("{:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} | {:5} {:5} {:5} {:5} | {:6.3f} {:6.3f} {:6.3f} {:6.3f}".
+				format(pos[0], pos[1], pos[2], norm[0], norm[1], norm[2], a[0], a[1], a1, a2, a3, a4, b[0], b[1], b[2], b[3]))
+	return mesh
 
-def parseIndices(f, Indices):
-	tell = f.tell()
-	index = struct.unpack("<HHH", f.read(6))
-
-	validateIndex(index, tell)
-
-	if VERBOSITY > 1:
-		print("{0}: {1}".format(hex(tell), index))
-	Indices.append(index)
-
-def parseIndex2(f, Indices):
-	tell = f.tell()
-	index = (struct.unpack("<HH", f.read(4)), 0)
-	if VERBOSITY > 1:
-		print("{0}: {1}".format(hex(tell), index))
-	Indices.append(index)
-
-
-
-def readVertices(f, NumVerts, Vertices, Format):
-	if Format == FORMAT_MESH:
-		for i in range(NumVerts):
-			parseVertexMesh(f, Vertices)
-	elif Format == FORMAT_COLLISION:
-		for i in range(NumVerts):
-			parseVertexNorm(f, Vertices)
-
-	else:
-		raise NameError("Unknown format {0}".format(Format))
-
-
-def parseModelVertices(f, NumVerts):
-	Verts = []
-	Normals = []
-	UV = []
-	for i in range(NumVerts):
+def parseVertices27(f, mesh):
+	# terrain.nvx
+	for i in range(mesh.NumVerts):
 		pos = struct.unpack("<fff", f.read(12))
 		norm = struct.unpack("<fff", f.read(12))
 		uv = struct.unpack("<ff", f.read(8))
 
-		'''
-		if uv[0] > 1 or uv[0] < 0:
-			raise NameError("U is out of bounds at index {1}: {0}".format(uv[0], i))
-		if uv[1] > 1 or uv[1] < 0:
-			raise NameError("V is out of bounds at index {1}: {0}".format(uv[1], i))
-		'''
+		(a0, a1) = struct.unpack("<ff", f.read(4*2))
 
-		Verts.append(pos)
-		Normals.append(norm)
-		UV.append(uv)
+		mesh.Positions.append(pos)
+		mesh.Normals.append(norm)
+		mesh.UVs.append(uv)
 		if VERBOSITY > 1:
-			print("{:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f}".format(pos[0], pos[1], pos[2], norm[0], norm[1], norm[2], uv[0], uv[1]))
-	return (Verts, Normals, UV)
+			print("{:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} | {:6.3f} {:6.3f}".
+				format(pos[0], pos[1], pos[2], norm[0], norm[1], norm[2], uv[0], uv[1], a0, a1))
+	return mesh
 
-
-def parseCollisionVertices(f, NumVerts):
-	Verts = []
-	for i in range(NumVerts):
-		pos = struct.unpack("<fff", f.read(12))
-		Verts.append(pos)
-		if VERBOSITY > 1:
-			print("{:6.3f} {:6.3f} {:6.3f}".format(pos[0], pos[1], pos[2]))
-	return (Verts, [], [])
-
-def parsIndexArray(f, NumIndices):
-	Indices = []
-	for i in range(NumIndices):
+def parseIndexArray(f, mesh):
+	Indices = mesh.Triangles
+	for i in range(mesh.NumIndices):
 		tell = f.tell()
 		index = readShort(f)
 		if VERBOSITY > 2:
 			print("{0}: {1}".format(hex(tell), index))
 		Indices.append(index)
-	return Indices
+	return mesh
 
-# do not use this method
-def parsIndexTris(f, NumTris):
-	Indices = []
-	for i in range(NumTris / 3):
-		index = struct.unpack("<HHH", f.read(3*2))
-		index = (index[1], index[0], index[2]);
-		if VERBOSITY > 1:
-			print("{:3} {:3} {:3}".format(index[0], index[1], index[2]))
-		Indices.append(list(index))
-	return Indices
-
-def indicesToTriangles(indices):
-	triangles = len(indices) / 3
+def indicesToTriangles(f, mesh):
+	indices = mesh.Triangles
+	triangles = int(mesh.NumIndices / 3)
 	result = []
 	for i in range(triangles):
 		index = (indices[i*3+0], indices[i*3+1], indices[i*3+2])
 		result.append(index)
 		if VERBOSITY > 1:
-			print("{:3} {:3} {:3}".format(index[0], index[1], index[2]))
-	return result
+			print("{:5} {:5} {:5}".format(index[0], index[1], index[2]))
+	mesh.Triangles = result
+	return mesh
 
-def indicesToTriangleStrip(indices):
-	triangles = (len(indices)-1) / 2
+def indicesToTriangleStrip(f, mesh):
+	indices = mesh.Triangles
+	triangles = int((mesh.NumIndices-1) / 2)
 	result = []
 	for i in range(triangles):
 		index = (indices[i*2+0], indices[i*2+1], indices[i*2+2])
 		result.append(index)
 		if VERBOSITY > 1:
-			print("{:3} {:3} {:3}".format(index[0], index[1], index[2]))
-	return result
+			print("{:5} {:5} {:5}".format(index[0], index[1], index[2]))
+	mesh.Triangles = result
+	return mesh
 
-def parseQuads(f, NumQuads):
-	result = []
-	for i in range(NumQuads):
+def parseQuads(f, mesh):
+	result = mesh.Quads
+	for i in range(mesh.NumQuads):
 		quad = struct.unpack("<HHHH", f.read(4*2))
 		quad = (quad[0], quad[1], quad[2], quad[3])
 		result.append(quad)
 		if VERBOSITY > 1:
-			print("{:3} {:3} {:3} {:3}".format(quad[0], quad[1], quad[2], quad[3]))
-	return result
+			print("{:5} {:5} {:5} {:5}".format(quad[0], quad[1], quad[2], quad[3]))
+	return mesh
+
+def validateMeshFormatSize(f, mesh):
+	vertexSize = mesh.NumVerts * 4 * (3 + 3 + 2)
+	quadsSize = mesh.NumQuads * 2 * 4
+	trisSize = mesh.NumIndices * 2
+	totalSize = vertexSize + quadsSize + trisSize
+	if mesh.DataSize != totalSize:
+		raise NameError("Format {} expects to have {} bytes ({} + {} + {}), but states {}. Probably parser is wrong.".format(mesh.Format, totalSize, vertexSize, quadsSize, trisSize, mesh.DataSize))
+	return mesh
+
+def validateCollisionFormatSize(f, mesh):
+	vertexSize = mesh.NumVerts * 4 * 3 # 3*4 bytes
+	quadsSize = mesh.NumQuads * 2 * 4
+	trisSize = mesh.NumIndices * 2
+	totalSize = vertexSize + quadsSize + trisSize
+	if mesh.DataSize != totalSize:
+		raise NameError("Format {} expects to have {} bytes ({} + {} + {}), but states {}. Probably parser is wrong.".format(mesh.Format, totalSize, vertexSize, quadsSize, trisSize, mesh.DataSize))
+	return mesh
+
+def validateSkinFormat(f, mesh):
+	vertexSize = mesh.NumVerts * 4*(3+3+2+2+4) # 14*4 bytes
+	quadsSize = mesh.NumQuads * 2 * 4
+	trisSize = mesh.NumIndices * 2
+	totalSize = vertexSize + quadsSize + trisSize
+	if mesh.DataSize != totalSize:
+		raise NameError("Format {} expects to have {} bytes ({} + {} + {}), but states {}. Probably parser is wrong.".format(mesh.Format, totalSize, vertexSize, quadsSize, trisSize, mesh.DataSize))
+	return mesh
+
+def validateTerrainFormat(f, mesh):
+	vertexSize = mesh.NumVerts * 4 * (3+3+2+2)# 10*4 bytes
+	quadsSize = mesh.NumQuads * 2 * 4
+	trisSize = mesh.NumIndices * 2
+	totalSize = vertexSize + quadsSize + trisSize
+	if mesh.DataSize != totalSize:
+		raise NameError("Format {} expects to have {} bytes ({} + {} + {}), but states {}. Probably parser is wrong.".format(mesh.Format, totalSize, vertexSize, quadsSize, trisSize, mesh.DataSize))
+	return mesh
+
+Converter = {
+	FORMAT_COLLISION:
+	(parseVerticesP, parseQuads, parseIndexArray, indicesToTriangles, validateCollisionFormatSize),
+
+	FORMAT_MODEL:
+	(parseVerticesPNU, parseQuads, parseIndexArray, indicesToTriangles, validateMeshFormatSize),
+
+	FORMAT_UNKNOWN_139:
+	(parseVertices139, parseQuads, parseIndexArray, indicesToTriangles, validateSkinFormat),
+
+	FORMAT_UNKNOWN_27:
+	(parseVertices27, parseQuads, parseIndexArray, indicesToTriangles, validateTerrainFormat)
+}
 
 def convert(f):
 	footprint = readInt(f)
 	if 0x4e565831 != footprint:
 		raise NameError("File is not recognized as .NVX")
 
-	NumVerts = readInt(f)
-	NumIndices = readInt(f)
-	NumQuads = readInt(f)
+	mesh = Mesh()
+
+	mesh.NumVerts = readInt(f)
+	mesh.NumIndices = readInt(f)
+	mesh.NumQuads = readInt(f)
 	Format = readInt(f)
-	#Format = readBits(_b, 2, 0)
-	#_c = readBits(_b, 30, 2)
-	dataOffset = readInt(f)
-	dataSize = readInt(f)
+	DataOffset = readInt(f)
+	mesh.DataSize = readInt(f)
+
+	mesh.Format = Format
 
 	if ANALYZE_ONLY:
-		return "{}, {}, {}, {}".format(Format, NumIndices, NumQuads, NumVerts)
+		return "{}, {}, {}, {}".format(Format, mesh.NumIndices, mesh.NumQuads, mesh.NumVerts)
 
 
-	print("Format: {4} Verts: {0} Indices: {1} Quads: {5}. Data: {2}, size: {3}".format(NumVerts, NumIndices, dataOffset, dataSize, Format, NumQuads))
+	FileInfo = "Format: {4} Verts: {0} Indices: {1} Quads: {5} Data: {2} Size: {3}".format(mesh.NumVerts, mesh.NumIndices, DataOffset, mesh.DataSize, Format, mesh.NumQuads)
+	if VERBOSITY > 0:
+		print(FileInfo)
 
-	Vertices = []
-	Normals = []
-	Uvs = []
-	Indices = []
-	Quads = []
+	f.seek(DataOffset)
 
-	f.seek(dataOffset)
-
-	if Format == FORMAT_COLLISION:
-		(Vertices, Normals, Uvs) = parseCollisionVertices(f, NumVerts)
-		Indices = parsIndexArray(f, NumIndices)
-	elif Format == FORMAT_MODEL:
-		(Vertices, Normals, Uvs) = parseModelVertices(f, NumVerts)
-		#Indices = parsIndexTris(f, NumIndices)
-		Quads = parseQuads(f, NumQuads)
-		Indices = parsIndexArray(f, NumIndices)
-		Indices = indicesToTriangles(Indices)
-		#Indices = indicesToTriangleStrip(Indices)
+	if Format in Converter:
+		steps = Converter[Format]
+		for func in steps:
+			mesh = func(f, mesh)
 	else:
-		raise NameError("File fromat unknown: {}, _a:{}".format(Format, _a))
+		raise NameError("File fromat unknown: {}. {}".format(Format, FileInfo))
 
-	'''
-	minIdx = min(Indices)
-	maxIdx = max(Indices)
-	if minIdx != 0 or maxIdx != NumVerts-1:
-		raise NameError("Min idx is {0} when expected 0. Max idx is {1} when expected {2}".format(minIdx, maxIdx, NumVerts-1))
-	'''
-
-	#readVertices(f, NumVerts, Vertices, Format)
-	'''
-	for i in range(NumIndices-1):
-		parseIndices(f, Indices)
-	parseIndex2(f, Indices)
-
-	print("{0} of {1}".format(len(Indices), NumIndices))
-
-	currentPos = f.tell()
-	print("{0} {1} {2}".format(currentPos, dataOffset, dataSize))
-	if currentPos - dataOffset != dataSize:
-		raise NameError("File length error")
-	'''
-	Mesh = (Vertices, Normals, Uvs, Indices);
-	return Mesh
+	return mesh
 
 def exportMeshToObj(mesh, fName):
 	f = open(fName + ".obj", "w")
@@ -277,8 +273,8 @@ def exportMeshToObj(mesh, fName):
 			strFormat = "f {0} {1} {2}\n"
 
 	#strFormat = "f {0}/{0} {1}/{1} {2}/{2}\n"
-	for i in range(indexNum/3):
-		f.write(strFormat.format(indexes[i+0], indexes[i+1], indexes[i+2]))
+	for i in range(indexNum):
+		f.write(strFormat.format(indexes[i][0], indexes[i][1], indexes[i][2]))
 
 	f.close()
 
@@ -289,17 +285,17 @@ def exportMeshToRaw(mesh, fName):
 	indexes = mesh[3]
 	indexNum = len(indexes)
 	strFormat = "{} {} {} {} {} {} {} {} {}\n"
-	for i in range(indexNum/3):
-		a = verts[indexes[i+0]]
-		b = verts[indexes[i+1]]
-		c = verts[indexes[i+2]]
+	for i in range(indexNum):
+		a = verts[indexes[i][0]]
+		b = verts[indexes[i][1]]
+		c = verts[indexes[i][2]]
 		f.write(strFormat.format(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]))
 
 	f.close()
 
 def exportToThree(mesh, fName):
 	f = open(fName + ".js", "w")
-	verts = mesh[0]
+	verts = mesh.Positions
 	lastVert = len(verts) - 1
 	f.write("var MeshVerts = [\n")
 	for i in range(lastVert):
@@ -307,23 +303,25 @@ def exportToThree(mesh, fName):
 	f.write("	[{:.6f}, {:.6f}, {:.6f}]\n".format(verts[lastVert][0], verts[lastVert][1], verts[lastVert][2]))
 	f.write("];\n")
 
-	normals = mesh[1]
+	normals = mesh.Normals
 	lastNormal = len(normals) - 1
 	f.write("var MeshNormals = [\n")
-	for i in range(lastNormal):
-		f.write("	[{:.6f}, {:.6f}, {:.6f}],\n".format(normals[i][0], normals[i][1], normals[i][2]))
-	f.write("	[{:.6f}, {:.6f}, {:.6f}]\n".format(normals[lastNormal][0], normals[lastNormal][1], normals[lastNormal][2]))
+	if len(normals) > 0:
+		for i in range(lastNormal):
+			f.write("	[{:.6f}, {:.6f}, {:.6f}],\n".format(normals[i][0], normals[i][1], normals[i][2]))
+		f.write("	[{:.6f}, {:.6f}, {:.6f}]\n".format(normals[lastNormal][0], normals[lastNormal][1], normals[lastNormal][2]))
 	f.write("];\n")
 
-	uvs = mesh[2]
+	uvs = mesh.UVs
 	lastuv = len(uvs) - 1
 	f.write("var MeshUvs = [\n")
-	for i in range(lastuv):
-		f.write("	[{:.6f}, {:.6f}],\n".format(uvs[i][0], uvs[i][1]))
-	f.write("	[{:.6f}, {:.6f}]\n".format(uvs[lastuv][0], uvs[lastuv][1]))
+	if len(uvs) > 0:
+		for i in range(lastuv):
+			f.write("	[{:.6f}, {:.6f}],\n".format(uvs[i][0], uvs[i][1]))
+		f.write("	[{:.6f}, {:.6f}]\n".format(uvs[lastuv][0], uvs[lastuv][1]))
 	f.write("];\n")
 
-	indexes = mesh[3]
+	indexes = mesh.Triangles
 	lastIndex = len(indexes) - 1
 	f.write("var MeshIndices = [\n")
 	for i in range(lastIndex):
