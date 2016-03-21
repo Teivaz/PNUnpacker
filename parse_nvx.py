@@ -1,36 +1,38 @@
 import struct, os
 
 ''' Script settings '''
-VERBOSITY = 2
-USE_DEVELOPEMENT_FOLDER = True
+VERBOSITY = 1
+USE_DEVELOPEMENT_FOLDER = False
 ANALYZE_ONLY = False
 
 
 if USE_DEVELOPEMENT_FOLDER:
-	PATH = "nvx"
+	PATH = "123"
 else:
 	PATH = "../_data.npk"
 
 
-''' Format Defines '''
+''' Format Description '''
+MESH_HAS_POS = 	0b00000001 # 3 floats	Position
+MESH_HAS_NORM = 0b00000010 # 3 floats	Normal
+MESH_HAS_1_1I = 0b00000100 # 1 int 		?
+MESH_HAS_UV =   0b00001000 # 2 floats	Texture UV coordinates
+MESH_HAS_2_2F = 0b00010000 # 2 floats	?
+MESH_HAS_3_2F = 0b00100000 # 2 floats	?
+MESH_HAS_4_2F = 0b01000000 # 2 floats	?
+MESH_HAS_LINKS= 0b10000000 # 4 short 4 float
 
-''' Known formats '''
-FORMAT_COLLISION = 1
-#FORMAT_MESH = 3
-FORMAT_MODEL = 11
+FORMAT_UNKNOWN_1 = 1     # 0b00000001 - pos
+FORMAT_UNKNOWN_5 = 5     # 0b00000101 - pos, ?
+FORMAT_UNKNOWN_121 = 121 # 0b01111001 - ...
+FORMAT_UNKNOWN_3 = 3     # 0b00000011 - pos, norm
+FORMAT_UNKNOWN_11 = 11   # 0b00001011 - pos, norm, uv
+FORMAT_UNKNOWN_27 = 27   # 0b00011011 - pos, norm, uv, ?
+FORMAT_UNKNOWN_139 = 139 # 0b10001011 - pos, norm, uv, ?
 
-''' All Formats '''
-FORMAT_UNKNOWN_1 = 1     # 0b00000001 - FORMAT_COLLISION
-FORMAT_UNKNOWN_5 = 5     # 0b00000101 - 5
-FORMAT_UNKNOWN_121 = 121 # 0b01111001 - 121
-FORMAT_UNKNOWN_3 = 3     # 0b00000011 - 3
-FORMAT_UNKNOWN_11 = 11   # 0b00001011 - FORMAT_MODEL
-FORMAT_UNKNOWN_27 = 27   # 0b00011011 - in progress
-FORMAT_UNKNOWN_139 = 139 # 0b10001011 - in progress
-
-FORMAT_UNKNOWN_59 = 59   # 0b00111011 - 59
-FORMAT_UNKNOWN_19 = 19   # 0b00010011 - 19
-FORMAT_UNKNOWN_123 = 123 # 0b01111011 - 123
+FORMAT_UNKNOWN_59 = 59   # 0b00111011 - pos, norm, uv, ?, ?, ?
+FORMAT_UNKNOWN_19 = 19   # 0b00010011 - pos, norm, ?
+FORMAT_UNKNOWN_123 = 123 # 0b01111011 - ...
 
 ''' /Defines '''
 
@@ -57,66 +59,75 @@ def readFloat(f):
 	(r, ) = struct.unpack("<f", f.read(4))
 	return r
 
+def parseVertivesFormat(f, mesh):
+	if VERBOSITY > 0:
+		debugString = ""
+		if mesh.Format & MESH_HAS_POS:
+			debugString += "        Position 3f        | "
+		if mesh.Format & MESH_HAS_NORM:
+			debugString += "        Normal  3f         | "
+		if mesh.Format & MESH_HAS_1_1I:
+			debugString += " 1? 1i | "
+		if mesh.Format & MESH_HAS_UV:
+			debugString += "  Texture UV 2f   | "
+		if mesh.Format & MESH_HAS_2_2F:
+			debugString += "     2?  2f       | "
+		if mesh.Format & MESH_HAS_3_2F:
+			debugString += "     3?  2f       | "
+		if mesh.Format & MESH_HAS_4_2F:
+			debugString += "     4?  2f       | "
+		if mesh.Format & MESH_HAS_LINKS:
+			debugString += "     Links  4i         |             Links  4f               | "
+		print(debugString)
 
-# Position
-def parseVerticesP(f, mesh):
 	for i in range(mesh.NumVerts):
-		pos = struct.unpack("<fff", f.read(12))
-		mesh.Positions.append(pos)
+		debugString = ""
+		if mesh.Format & MESH_HAS_POS:
+			v = struct.unpack("<fff", f.read(12))
+			mesh.Positions.append(v)
+			if VERBOSITY > 1:
+				debugString += "{:8.3f} {:8.3f} {:8.3f} | ".format(v[0], v[1], v[2])
+		if mesh.Format & MESH_HAS_NORM:
+			v = struct.unpack("<fff", f.read(12))
+			mesh.Normals.append(v)
+			if VERBOSITY > 1:
+				debugString += "{:8.3f} {:8.3f} {:8.3f} | ".format(v[0], v[1], v[2])
+		if mesh.Format & MESH_HAS_1_1I:
+			v = readInt(f)
+			# TODO: append to the mesh
+			if VERBOSITY > 1:
+				debugString += "{:6} | ".format(v)
+		if mesh.Format & MESH_HAS_UV:
+			v = struct.unpack("<ff", f.read(8))
+			mesh.UVs.append(v)
+			if VERBOSITY > 1:
+				debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
+		if mesh.Format & MESH_HAS_2_2F:
+			v = struct.unpack("<ff", f.read(8))
+			# TODO: append to the mesh
+			if VERBOSITY > 1:
+				debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
+		if mesh.Format & MESH_HAS_3_2F:
+			v = struct.unpack("<ff", f.read(8))
+			# TODO: append to the mesh
+			if VERBOSITY > 1:
+				debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
+		if mesh.Format & MESH_HAS_4_2F:
+			v = struct.unpack("<ff", f.read(8))
+			# TODO: append to the mesh
+			if VERBOSITY > 1:
+				debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
+		if mesh.Format & MESH_HAS_LINKS:
+			(a1, a2, a3, a4) = struct.unpack("<hhhh", f.read(8))
+			v = struct.unpack("<ffff", f.read(16))
+			# TODO: append to the mesh
+			if VERBOSITY > 1:
+				debugString += "{:5} {:5} {:5} {:5} | {:8.3f} {:8.3f} {:8.3f} {:8.3f} | ".format(a1, a2, a3, a4, v[0], v[1], v[2], v[3])
 		if VERBOSITY > 1:
-			print("{:6.3f} {:6.3f} {:6.3f}".format(pos[0], pos[1], pos[2]))
+			print(debugString)
+
 	return mesh
-
-# Position, normal, UV
-def parseVerticesPNU(f, mesh):
-	for i in range(mesh.NumVerts):
-		pos = struct.unpack("<fff", f.read(12))
-		norm = struct.unpack("<fff", f.read(12))
-		uv = struct.unpack("<ff", f.read(8))
-		mesh.Positions.append(pos)
-		mesh.Normals.append(norm)
-		mesh.UVs.append(uv)
-		if VERBOSITY > 1:
-			print("{:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f}".
-				format(pos[0], pos[1], pos[2], norm[0], norm[1], norm[2], uv[0], uv[1]))
-	return mesh
-
-# 
-def parseVertices139(f, mesh):
-	# skin.nvx
-	for i in range(mesh.NumVerts):
-		pos = struct.unpack("<fff", f.read(12))
-		norm = struct.unpack("<fff", f.read(12))
-
-		a = struct.unpack("<ff", f.read(8))
-		(a1, a2, a3, a4) = struct.unpack("<hhhh", f.read(8))
-
-		b = struct.unpack("<ffff", f.read(4*4))
-
-		mesh.Positions.append(pos)
-		mesh.Normals.append(norm)
-		if VERBOSITY > 1:
-			print("{:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} | {:5} {:5} {:5} {:5} | {:6.3f} {:6.3f} {:6.3f} {:6.3f}".
-				format(pos[0], pos[1], pos[2], norm[0], norm[1], norm[2], a[0], a[1], a1, a2, a3, a4, b[0], b[1], b[2], b[3]))
-	return mesh
-
-def parseVertices27(f, mesh):
-	# terrain.nvx
-	for i in range(mesh.NumVerts):
-		pos = struct.unpack("<fff", f.read(12))
-		norm = struct.unpack("<fff", f.read(12))
-		uv = struct.unpack("<ff", f.read(8))
-
-		(a0, a1) = struct.unpack("<ff", f.read(4*2))
-
-		mesh.Positions.append(pos)
-		mesh.Normals.append(norm)
-		mesh.UVs.append(uv)
-		if VERBOSITY > 1:
-			print("{:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} {:6.3f} | {:6.3f} {:6.3f} | {:6.3f} {:6.3f}".
-				format(pos[0], pos[1], pos[2], norm[0], norm[1], norm[2], uv[0], uv[1], a0, a1))
-	return mesh
-
+		
 def parseIndexArray(f, mesh):
 	Indices = mesh.Triangles
 	for i in range(mesh.NumIndices):
@@ -161,56 +172,6 @@ def parseQuads(f, mesh):
 			print("{:5} {:5} {:5} {:5}".format(quad[0], quad[1], quad[2], quad[3]))
 	return mesh
 
-def validateMeshFormatSize(f, mesh):
-	vertexSize = mesh.NumVerts * 4 * (3 + 3 + 2)
-	quadsSize = mesh.NumQuads * 2 * 4
-	trisSize = mesh.NumIndices * 2
-	totalSize = vertexSize + quadsSize + trisSize
-	if mesh.DataSize != totalSize:
-		raise NameError("Format {} expects to have {} bytes ({} + {} + {}), but states {}. Probably parser is wrong.".format(mesh.Format, totalSize, vertexSize, quadsSize, trisSize, mesh.DataSize))
-	return mesh
-
-def validateCollisionFormatSize(f, mesh):
-	vertexSize = mesh.NumVerts * 4 * 3 # 3*4 bytes
-	quadsSize = mesh.NumQuads * 2 * 4
-	trisSize = mesh.NumIndices * 2
-	totalSize = vertexSize + quadsSize + trisSize
-	if mesh.DataSize != totalSize:
-		raise NameError("Format {} expects to have {} bytes ({} + {} + {}), but states {}. Probably parser is wrong.".format(mesh.Format, totalSize, vertexSize, quadsSize, trisSize, mesh.DataSize))
-	return mesh
-
-def validateSkinFormat(f, mesh):
-	vertexSize = mesh.NumVerts * 4*(3+3+2+2+4) # 14*4 bytes
-	quadsSize = mesh.NumQuads * 2 * 4
-	trisSize = mesh.NumIndices * 2
-	totalSize = vertexSize + quadsSize + trisSize
-	if mesh.DataSize != totalSize:
-		raise NameError("Format {} expects to have {} bytes ({} + {} + {}), but states {}. Probably parser is wrong.".format(mesh.Format, totalSize, vertexSize, quadsSize, trisSize, mesh.DataSize))
-	return mesh
-
-def validateTerrainFormat(f, mesh):
-	vertexSize = mesh.NumVerts * 4 * (3+3+2+2)# 10*4 bytes
-	quadsSize = mesh.NumQuads * 2 * 4
-	trisSize = mesh.NumIndices * 2
-	totalSize = vertexSize + quadsSize + trisSize
-	if mesh.DataSize != totalSize:
-		raise NameError("Format {} expects to have {} bytes ({} + {} + {}), but states {}. Probably parser is wrong.".format(mesh.Format, totalSize, vertexSize, quadsSize, trisSize, mesh.DataSize))
-	return mesh
-
-Converter = {
-	FORMAT_COLLISION:
-	(parseVerticesP, parseQuads, parseIndexArray, indicesToTriangles, validateCollisionFormatSize),
-
-	FORMAT_MODEL:
-	(parseVerticesPNU, parseQuads, parseIndexArray, indicesToTriangles, validateMeshFormatSize),
-
-	FORMAT_UNKNOWN_139:
-	(parseVertices139, parseQuads, parseIndexArray, indicesToTriangles, validateSkinFormat),
-
-	FORMAT_UNKNOWN_27:
-	(parseVertices27, parseQuads, parseIndexArray, indicesToTriangles, validateTerrainFormat)
-}
-
 def convert(f):
 	footprint = readInt(f)
 	if 0x4e565831 != footprint:
@@ -237,12 +198,10 @@ def convert(f):
 
 	f.seek(DataOffset)
 
-	if Format in Converter:
-		steps = Converter[Format]
-		for func in steps:
-			mesh = func(f, mesh)
-	else:
-		raise NameError("File fromat unknown: {}. {}".format(Format, FileInfo))
+	mesh = parseVertivesFormat(f, mesh)
+	mesh = parseQuads(f, mesh)
+	mesh = parseIndexArray(f, mesh)
+	mesh = indicesToTriangles(f, mesh)
 
 	return mesh
 
@@ -337,7 +296,7 @@ def saveMesh(mesh, fName):
 		return
 	#exportMeshToObj(mesh, fName)
 	#exportMeshToRaw(mesh, fName)
-	exportToThree(mesh, fName)
+	#exportToThree(mesh, fName)
 	None
 
 logFile = open("nvx.log", 'w')
