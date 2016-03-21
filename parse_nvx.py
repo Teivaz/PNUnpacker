@@ -60,7 +60,7 @@ def readFloat(f):
 	return r
 
 def parseVertivesFormat(f, mesh):
-	if VERBOSITY > 0:
+	if VERBOSITY > 1:
 		debugString = ""
 		if mesh.Format & MESH_HAS_POS:
 			debugString += "        Position 3f        | "
