@@ -71,7 +71,7 @@ def parseVertivesFormat(f, mesh):
 		if mesh.Format & MESH_HAS_NORM:
 			debugString += "        Normal  3f         | "
 		if mesh.Format & MESH_HAS_1_2S:
-			debugString += " 1? 1i | "
+			debugString += "    1? 2s     | "
 		if mesh.Format & MESH_HAS_UV0:
 			debugString += "  Texture UV0 2f  | "
 		if mesh.Format & MESH_HAS_UV1:
@@ -98,13 +98,11 @@ def parseVertivesFormat(f, mesh):
 			if VERBOSITY > 1:
 				debugString += "{:8.3f} {:8.3f} {:8.3f} | ".format(v[0], v[1], v[2])
 		if mesh.Format & MESH_HAS_1_2S:
-			v = readShort(f)
-			mesh.I.append(v)
-			v = readShort(f)
-			mesh.I.append(v)
-			# TODO: append to the mesh
+			v = struct.unpack("<hh", f.read(4))
+			mesh.I.append(v[0])
+			mesh.I.append(v[1])
 			if VERBOSITY > 1:
-				debugString += "{:6} | ".format(v)
+				debugString += "{:6} {:6} | ".format(v[0], v[1])
 		if mesh.Format & MESH_HAS_UV0:
 			v = struct.unpack("<ff", f.read(8))
 			mesh.UVs.append(v)
@@ -303,15 +301,13 @@ def exportToThree(mesh, fName):
 
 	f.close()
 
-analyzedData = [[], []]
+analyzedData = []
 
 def saveMesh(mesh, fName):
 	if ANALYZE_ONLY:
 		if mesh[0]:
-			y = mesh[1]
-			x = [len(analyzedData[0])] * len(y)
-			analyzedData[0] = analyzedData[0] + x
-			analyzedData[1] = analyzedData[1] + y
+			global analyzedData
+			analyzedData += mesh[1]
 			#print y[0], y
 			#raise NameError()
 			#print("({}, \"{}\"),".format(mesh, fName.replace('\\', '/')))
@@ -374,8 +370,18 @@ def main():
 	logFile.close()
 
 	if ANALYZE_ONLY:
+		bins= np.concatenate(([0], np.power(2, range(16))))
+		print len(analyzedData)
+		print bins
+		a = np.histogram(analyzedData, bins=bins)
+		y = a[0]
+		x = a[1]
+		x = (x[1:] + x[:-1]) / 2
+		plt.plot(x, y, 'o')
+		plt.xscale('log')
+		plt.yscale('log')
 		#data = np.concatenate((spread, center, flier_high, flier_low), 0)
-		plt.plot(analyzedData[0], analyzedData[1], 'ro')
+		#plt.plot(analyzedData[0], analyzedData[1], 'ro')
 
 		#plt.boxplot(analyzedData)
 		plt.show()
