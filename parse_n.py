@@ -6,17 +6,36 @@ def isValid(f):
 
 def readLine(f):
 	(size, ) = struct.unpack("<h", f.read(2))
-	format = "{0}c".format(size)
+	format = "{}c".format(size)
 	string = struct.unpack(format, f.read(size))
 	string = "".join(string)
-	#string = str(f.read(size))
+	#return "{}|{} ".format(size, string)
 	return string
 
+def readNBytes(f, size):
+	format = "{}b".format(size)
+	data = struct.unpack(format, f.read(size))
+	return "{}".format(data)
+
+def readBytes(f):
+	(size, ) = struct.unpack("<h", f.read(2))
+	format = "{}b".format(size)
+	data = struct.unpack(format, f.read(size))
+	return "{}".format(data)
+
 def readLineS(f):
-	(size_all, size) = struct.unpack("<hh", f.read(4))
-	format = "{0}c".format(size)
-	string = struct.unpack(format, f.read(size))
-	string = "".join(string)
+	string = ""
+	(size, ) = struct.unpack("<h", f.read(2))
+	if size > 1:
+		(sizeS, ) = struct.unpack("<h", f.read(2))
+		format = "{0}c".format(sizeS)
+		string = struct.unpack(format, f.read(sizeS))
+		string = "".join(string)
+		size -= sizeS+2
+	if size > 0:
+		format = "{}b".format(size)
+		data = readNBytes(f, size)
+		string = "{}#{}".format(string, data)
 	#string = str(f.read(size))
 	return string
 
@@ -36,88 +55,139 @@ def readLineR(f):
 	#string = str(f.read(size))
 	return string
 
-def tag_u(f, tag):
+
+def tag_u(f):
 	result = []
 	result.append(readLine(f))
-	print tag + "_u " + " ".join(result)
+	return " ".join(result)
 
-def tag_us(f, tag):
+def tag_us(f):
 	result = []
 	result.append(readLineS(f))
-	print tag + "_u " + " ".join(result)
+	return " ".join(result)
 
 def tag_SFLN(f):
 	result = []
 	result.append(readLineS(f))
-	print "SFLN " + " ".join(result)
+	return " ".join(result)
 
 def tag_STGT(f):
 	result = []
 	result.append(readLineS(f))
-	print "STGT " + " ".join(result)
+	return " ".join(result)
 
 def tag_STXT(f):
 	result = []
 	result.append(readLineL(f))
 	result.append(readLine(f))
-	print "STXT " + " ".join(result)
+	return " ".join(result)
 
 def tag_SRAD(f):
 	result = []
 	result.append(readLine(f))
-	print "SRAD"
+	return " ".join(result)
 
 def tag_SBNC(f):
 	result = []
 	result.append(readLine(f))
-	print "SBNC"
+	return " ".join(result)
 
 def tag_SDMG(f):
 	result = []
 	result.append(readLine(f))
-	print "SDMG"
+	return " ".join(result)
 
 def tag_STOU(f):
 	result = []
 	result.append(readLine(f))
-	print "STOU"
+	return " ".join(result)
 
 def tag_new(f):
 	result = []
 	result.append(readLine(f))
 	result.append(readLine(f))
-	print "new " + " ".join(result)
+	return " ".join(result)
 
 def tag_sel(f):
 	result = []
 	result.append(readLine(f))
-	print "sel " + " ".join(result)
+	return " ".join(result)
+
+###################
+def fun_v_f(f):
+	f.read(2)
+	r = struct.unpack("<f", f.read(4))
+	return "{}".format(r[0])
+def fun_v_fff(f):
+	f.read(2)
+	v = struct.unpack("<fff", f.read(12))
+	return "{}, {}, {}".format(v[0], v[1], v[2])
+def fun_v_o(f): #TODO object may be not a string
+	f.read(2)
+	s = readLine(f)
+	return s
+def fun_v_s(f):
+	f.read(2)
+	s = readLine(f)
+	return s
+def fun_v_ss(f):
+	f.read(2)
+	s1 = readLine(f)
+	s2 = readLine(f)
+	return "{}, {}".format(s1, s2)
+def fun_b_ss(f):
+	f.read(2)
+	f.read(4)
+	s1 = readLine(f)
+	s2 = readLine(f)
+	return "{}, {}".format(s1, s2)
+
+Tags = {
+	"NOB0": (tag_u, ""),
+	"_new": (tag_new, "new"),
+	"_sel": (tag_sel, "sel"),
+	"SRAD": (fun_v_f, "setradius"),
+	"SCHN": (fun_v_s, "setchannel"),
+	"STGT": (fun_v_o, "settarget"), #object
+	"SXYZ": (fun_v_fff, "sxyz"),
+	"TXYZ": (fun_v_fff, "txyz"),
+	"STXT": (fun_b_ss, "settexture"), #TODO return bool
+	"SFAF": (fun_v_f, "setfinishedafter"),
+	"SRPT": (fun_v_s, "setreptype"),
+
+	"SFLN": (tag_SFLN, "_SFLN"),
+	"SBNC": (tag_SBNC, "_SBNC"),
+	"SDMG": (tag_SDMG, "_SDMG"),
+	"STOU": (tag_STOU, "_STOU"),
+	"SMSN": (readLineS, "_SMSN"),
+	"SOCN": (readLineS, "_SOCN"),
+	"SACC": (readLineS, "_SACC"),
+	"SICN": (readLineS, "_SICN"),
+	"SLFT": (readLineS, "_SLFT"),
+	"SRAC": (readLineS, "_SRAC"),
+	"SSTB": (readLineS, "_SSTB"),
+	"SUTR": (readLineS, "_SUTR"),
+	"SAFM": (readLineS, "_SAFM"),
+	"SAFU": (readLineS, "_SAFU"),
+	"SAUD": (readBytes, "_SAUD"),
+	"SRDO": (readBytes, "_SRDO"),
+}
 
 def parseTag(tag, f):
-	if tag == "NOB0":
-		return tag_u(f, tag)
-	if tag == "_new":
-		return tag_new(f)
-	if tag == "_sel":
-		return tag_sel(f)
-	if tag == "SFLN":
-		return tag_SFLN(f)
-	if tag == "STGT":
-		return tag_STGT(f)
-	if tag == "STXT":
-		return tag_STXT(f)
-	if tag == "SRAD":
-		return tag_SRAD(f)
-	if tag == "SBNC":
-		return tag_SBNC(f)
-	if tag == "SDMG":
-		return tag_SDMG(f)
-	if tag == "STOU":
-		return tag_STOU(f)
+	name = tag
+	result = ""
+	pos = f.tell()
+	if tag in Tags:
+		(fun, name) = Tags[tag]
+		result = fun(f)
+	else:
+		result = readBytes(f)
 
+	print("{} {}".format(name, result))
+	#print("0x{:0x}: {} {}".format(pos, tag, result))
+	return
 
-	if tag[0] == "S":
-		return tag_us(f, tag)
+	if tag[0] == "S": tag_u,(f, tag)
 	return tag_u(f, tag)
 
 
@@ -146,7 +216,7 @@ def parse(f):
 
 
 def main():
-	name = "_main.n"
+	name = "a_ammo.n/_main.n"
 	f = open(name, "rb")
 	parse(f)
 	f.close()

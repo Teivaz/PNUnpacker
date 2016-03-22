@@ -1,0 +1,7809 @@
+<html>
+<head><title></title></head>
+<body bgcolor=#82a5b3 text=#000000  link=#0000ff vlink=#0000cc alink=#ffffff>
+<hr> code/src/gfx/nd3d7_cmds.cc<br>
+ <a name="nd3d7server">
+<h1>nd3d7server</h1>
+ <a name="nd3d7server"> <dd><b>Superklasse: ngfxserver</b><br>
+<dd>  INFO
+<br>
+<dd>  GfxServer on top of Direct3D V7.
+<br>
+<dd>--------------------------------------------------------------------
+<br>
+
+<hr> code/src/gfx/nd3d_cmds.cc<br>
+ <a name="nd3dserver">
+<h1>nd3dserver</h1>
+ <a name="nd3dserver"> <dd><b>Superklasse: ngfxserver</b><br>
+<dd>  INFO
+<br>
+<dd>  GfxServer aus Basis von Direct3D V6.
+<br>
+<dd>--------------------------------------------------------------------
+<br>
+
+<hr> code/src/gfx/ngfx_cmds.cc<br>
+ <a name="ngfxserver">
+<h1>ngfxserver</h1>
+ <a name="ngfxserver"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Superklasse aller Grafik-Server, der Default-Grafik-Server
+<br>
+<dd>  ist unter "/sys/servers/gfx" zu finden.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxserversetdisplaymode"><b>setdisplaymode</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (DisplayMode)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>
+<br>
+<dd>  *** NEU *** NEU *** NEU ***
+<br>
+<dd>
+<br>
+<dd>  Stellt den Display-Mode ein, der beim naechsten
+<br>
+<dd>  'opendisplay' verwendet werden soll. Der String
+<br>
+<dd>  besteht aus beliebig vielen Elementen der
+<br>
+<dd>  Form 'tag(value)', die durch ein '-' voneinander
+<br>
+<dd>  getrennt sind. Der String darf keine Leerzeichen
+<br>
+<dd>  enthalten. Die Tags koennen in beliebiger Reihenfolge
+<br>
+<dd>  uebergeben werden.
+<br>
+<dd>  Folgende Tags sind definiert:
+<br>
+<dd>
+<br>
+<dd>  dev(id)
+<br>
+<dd>      Definiert das zu verwendende Device.
+<br>
+<dd>      Unter Win32 mit DirectX ist das eine
+<br>
+<dd>      Zahl von 0..n, welche das 3D-Device
+<br>
+<dd>      im System beschreibt, falls mehrere
+<br>
+<dd>      existieren.
+<br>
+<dd>      Unter X ist das eine komplette XDisplay-
+<br>
+<dd>      ID, z.B. dev(192.168.0.90:1)
+<br>
+<dd>
+<br>
+<dd>  type(win|full)
+<br>
+<dd>      Definiert den Typ des Displays.
+<br>
+<dd>      type(win) entspricht Windowed-Mode,
+<br>
+<dd>      type(full) entspricht Fullscreen. Default
+<br>
+<dd>      ist Windowed Mode.
+<br>
+<dd>
+<br>
+<dd>  w(width), h(height), bpp(bpp)
+<br>
+<dd>      Definiert Breite, Hoehe und Bittiefe des
+<br>
+<dd>      Modes. Default ist w(640), h(480), bpp(16)
+<br>
+<dd>
+<br>
+<dd>
+<br>
+<dd>  Der uebergegebene Display-Mode-Descriptor ist
+<br>
+<dd>  nur als Wunsch zu verstehen. Falls bestimmte
+<br>
+<dd>  Einstellungen nicht unterstuetzt werden,
+<br>
+<dd>  waehlt der GfxServer in der Regel eine
+<br>
+<dd>  moeglichst naheliegende.
+<br>
+<dd>
+<br>
+<dd>  Beispiele:
+<br>
+<dd>  .setdisplaymode "dev(1)-type(full)-w(800)-h(600)-bpp(32)"
+<br>
+<dd>  .setdisplaymode "type(win)-w(800)"
+<br>
+<dd>  .setdisplaymode "type(full)"
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxservergetdisplaymode"><b>getdisplaymode</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (DisplayMode)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den aktuellen Display-Mode, dieser kann vom
+<br>
+<dd>  per 'setdisplaymode' abweichen, falls in der Display-
+<br>
+<dd>  Mode-Database kein genauer Treffer gefunden wurde und
+<br>
+<dd>  stattdessen ein aehnlicher Mode gewaehlt wurde.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxserveropendisplay"><b>opendisplay</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Oeffne Display, so dass auch was zu sehen ist...
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxserverclosedisplay"><b>closedisplay</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Display wieder schliessen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxserversetviewvolume"><b>setviewvolume</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (MinX), f (MaxX), f (MinY), f (MaxY), f (MinZ), f (MaxZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert das Viewvolume, d.h. die 6 Ebenen, welche
+<br>
+<dd>  die Pyramide alles Sichtbaren definieren. MinZ und MaxZ
+<br>
+<dd>  sind die Front- und Far-Clipping-Plane.
+<br>
+<dd>  MinX, MaxX, MinY, MaxY beschreiben ein Rechteck auf
+<br>
+<dd>  der Frontclipping-Plane, wo die seitlichen Clipebenen
+<br>
+<dd>  die Frontplane schneiden.
+<br>
+<dd>  Das Default-Viewvolume ist
+<br>
+<dd>      MinX = -0.1
+<br>
+<dd>      MaxX = +0.1
+<br>
+<dd>      MinY = -0.1
+<br>
+<dd>      MaxY = +0.1
+<br>
+<dd>      MinZ = +0.1
+<br>
+<dd>      MaxZ = +25000.0
+<br>
+<dd>  ...welches einen 90 Grad Blickwinkel ergibt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxservergetviewvolume"><b>getviewvolume</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (MinX), f (MaxX), f (MinY), f (MaxY), f (MinZ), f (MaxZ)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt die per 'setviewvolume' definierten Werte ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxserversetclearcolor"><b>setclearcolor</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stellt die Hintergrund-Farbe ein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxservergetclearcolor"><b>getclearcolor</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  INFO
+<br>
+<dd>  Frage per 'setclearcolor' eingestellte Werte ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ngfxserverscreenshot"><b>screenshot</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (FileName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Generiert einen Screenshot unter dem angegebenen
+<br>
+<dd>  Filenamen. Es wird ein 24 Bit BMP File erzeugt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/gfx/ngl_dispatch.cc<br>
+ <a name="nglserver">
+<h1>nglserver</h1>
+ <a name="nglserver"> <dd><b>Superklasse: ngfxserver</b><br>
+<dd>  INFO
+<br>
+<dd>  Der auf OpenGL 1.1 aufsetzende GfxServer fuer Win32 und
+<br>
+<dd>  X Window.
+<br>
+<dd>--------------------------------------------------------------------
+<br>
+
+<hr> code/src/gfx/nscene_cmds.cc<br>
+ <a name="nscenegraph">
+<h1>nscenegraph</h1>
+ <a name="nscenegraph"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Der SceneGraph lebt unter dem Namen /sys/servers/sgraph und
+<br>
+<dd>  bildet eine optimierende Zwischenschicht zwischen
+<br>
+<dd>  nvisnode Hierarchien und dem GfxServer. Ueber das
+<br>
+<dd>  Scriptinterface des Scenegraph kann man diverse "globale"
+<br>
+<dd>  Einstellungen vornehmen, die beeinflussen, wie nvisnodes
+<br>
+<dd>  sich rendern.
+<br>
+<dd>  Das Objekt exportiert folgende Status-Variablen:
+<br>
+<dd>  sg_nodes    -> Anzahl (3D-)Nodes im Scenegraph
+<br>
+<dd>  sg_vertices -> Anzahl gerenderter Vertices
+<br>
+<dd>  sg_lights   -> Anzahl Lichtquellen-Nodes
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nscenegraphsetlodrange"><b>setlodrange</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (MinDist), f (MaxDist)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die minimale und maximale Entfernung fuer
+<br>
+<dd>  die Level-Of-Detail-Berechnung. Der Lod-Wert fuer
+<br>
+<dd>  ein nvisnode Objekt wird linear von 1.0 bis 0.0
+<br>
+<dd>  zwischen der minimalen und maximalen Entfernung
+<br>
+<dd>  interpoliert. Liegt die Entfernung ausserhalb
+<br>
+<dd>  der Lod-Range wird der minimale/maximale Lod-Wert
+<br>
+<dd>  (1.0 fuer <=MinDist, 0.0 fuer >= MaxDist) angenommen.
+<br>
+<dd>  Die Defaultwerte sind MinDist=1.0, MaxDist=25000.0
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nscenegraphgetlodrange"><b>getlodrange</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (MinDist), f (MaxDist)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die per 'setlodrange' definierten Werte zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nscenegraphsetvisualize"><b>setvisualize</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (Visualize)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schalte Visualisierung an oder aus. Visualisiert wird
+<br>
+<dd>  der Bounding-Box-Check des Scenegraph. Rote Boxen
+<br>
+<dd>  sind vollstaendig innerhalb des Viewvolumes, gelbe
+<br>
+<dd>  sind geclippt, blaue sind vollstaendig ausserhalb
+<br>
+<dd>  (die sieht man aber nie, es sei denn es ist ein Bug).
+<br>
+<dd>  Objekte mit weniger als 32 Vertices sind immer gelb,
+<br>
+<dd>  weil dort ein Bounding-Box-Check Overkill waere.
+<br>
+<dd>
+<br>
+<dd>  *** KNOWN BUGS ***
+<br>
+<dd>  - Texturing wird abgeschaltet
+<br>
+<dd>  - der nd3dserver kann keine Linien zeichnen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nscenegraphgetvisualize"><b>getvisualize</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Visualize)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den per 'setvisualize' eingestellten Wert ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nscenegraphfeedchannel"><b>feedchannel</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (ChannelName), f (Value)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Initialisiert einen Channel mit dem angegebenen Wert.
+<br>
+<dd>  Der Channel wird fortan in jedem Frame mit diesem
+<br>
+<dd>  Wert vorinitialisiert. Man beachte aber, dass Nodes
+<br>
+<dd>  in der Visual-Hierarchie den Channel jederzeit
+<br>
+<dd>  ueberschreiben koennen, und damit der Wert auch fuer
+<br>
+<dd>  die folgenden Frames verlorengeht (es macht z.B. keinen
+<br>
+<dd>  Sinn, die Standard-Channels 'time' oder 'lod' zu
+<br>
+<dd>  setzen, weil diese sofort am Anfang eines Frame
+<br>
+<dd>  und fuer jedes Objekt ueberschrieben werden).
+<br>
+<dd>  Wenn es den Channel noch nicht gibt, wird einer
+<br>
+<dd>  "on demand" allokiert und dann der Wert gesetzt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/input/ndxinp_dispatch.cc<br>
+ <a name="ndxinputserver">
+<h1>ndxinputserver</h1>
+ <a name="ndxinputserver"> <dd><b>Superklasse: ninputserver</b><br>
+<dd>  INFO
+<br>
+<dd>  Das ist der DirectX6-basierte Inputserver fuer
+<br>
+<dd>  Windows-Plattformen. Er stellt alle von DirectInput
+<br>
+<dd>  erkannten Input-Devices zur Verfuegung (nicht die System-
+<br>
+<dd>  Maus und das System-Keyboard). Unter 'sys/share/input'
+<br>
+<dd>  findet man die Liste der unterstuetzten Devices und
+<br>
+<dd>  deren Eigenschaften.
+<br>
+<dd>---------------------------------------------------------
+<br>
+
+<hr> code/src/input/ninput_cmds.cc<br>
+ <a name="ninputserver">
+<h1>ninputserver</h1>
+ <a name="ninputserver"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Der InputServer lebt unter dem Namen /sys/servers/input
+<br>
+<dd>  und stellt die globale Liste an Input-Events zur
+<br>
+<dd>  Verfuegung. Der Server generiert die Input-Events nicht
+<br>
+<dd>  unbedingt selbst. Zum Beispiel fuettert der nGfxServer
+<br>
+<dd>  den InputServer mit Tasten und Mausereignissen.
+<br>
+<dd>  Der InputServer muss NACH dem GfxServer erzeugt werden,
+<br>
+<dd>  weil der GfxServer ein Window-Handle bereitstellen
+<br>
+<dd>  kann, welches vom InputServer benoetigt wird (zumindest
+<br>
+<dd>  ist das unter Win32 mit DirectInput so).
+<br>
+<dd>  Unter /sys/share/input kann man gucken, welche
+<br>
+<dd>  Input-Devices der Server erkannt hat, und welche
+<br>
+<dd>  Channels ein Device anbietet.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverstartlogging"><b>startlogging</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Starte Input-Logging nach stdout.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverstoplogging"><b>stoplogging</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stoppe Input-Logging.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverislogging"><b>islogging</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Logging)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniere Logging-Status.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverstartrecording"><b>startrecording</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Starte Input-Recording nach angegebenen File.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverstoprecording"><b>stoprecording</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stoppe Input-Recording.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverisrecording"><b>isrecording</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Recording)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniere Recording-Status.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverstartplaying"><b>startplaying</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Starte Input-Abspielen von angegebenem File.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverstopplaying"><b>stopplaying</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stoppe Input-Abspielen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverisplaying"><b>isplaying</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Playing)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniere Playing-Status.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverbeginmap"><b>beginmap</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet einen Block von Mapping-Definitionen ein. Alle
+<br>
+<dd>  vorher definierten Mappings gehen verloren!
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputservermap"><b>map</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (EventName), s (StateName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Mappt ein InputEvent auf einen InputState. Der 'EventName'
+<br>
+<dd>  definiert ein InputEvent, welches den per 'StateName'
+<br>
+<dd>  angegebenen InputState kontrolliert. Die Definition
+<br>
+<dd>  eines Input-Events besteht aus Device-ID, Channel-
+<br>
+<dd>  ID und Channel-Modifier (nicht bei Achsen):
+<br>
+<dd>
+<br>
+<dd>  dev:channel[.up|down|pressed|long|double]
+<br>
+<dd>
+<br>
+<dd>  Zum Beispiel:
+<br>
+<dd>      keyb0:b.pressed - Taste 'B' auf Keyboard 0 unten
+<br>
+<dd>      keyb0:a.down    - Taste 'A' auf Keyboard 0 niedergedrueckt
+<br>
+<dd>      joy0:b0.up      - Taste 0 auf Joystick 0 losgelassen
+<br>
+<dd>      joy1:b1.double  - Taste 1 auf Joystick 1 doppel geklickt
+<br>
+<dd>      joy0:b2.long    - Taste 2 auf Joystick 2 lang gedrueckt
+<br>
+<dd>      mouse0:-x       - Mouse 0 nach links bewegt
+<br>
+<dd>
+<br>
+<dd>  Eine Liste der akzeptierten Devices findet man unter
+<br>
+<dd>  '/sys/share/input/devs', die Liste der vom Device angebotenen
+<br>
+<dd>  Channels im 'channels' Subdirectory jedes Device.
+<br>
+<dd>
+<br>
+<dd>  Bei der Event-Definition koennen 2 Input-Events UND-
+<br>
+<dd>  verknuepft werden, das erste Input-Event definiert
+<br>
+<dd>  dann ein Qualifier-Event, welches zusammen mit
+<br>
+<dd>  dem zweiten Event aktiv sein muss, um den InputState
+<br>
+<dd>  zu kontrollieren. Die Verknuepfung erfolgt mit dem
+<br>
+<dd>  '&' Zeichen, der String darf KEINE Leerzeichen enthalten.
+<br>
+<dd>  Beispiel:
+<br>
+<dd>
+<br>
+<dd>      keyb0:ctrl&keyb0:left.down   - Ctrl-Left auf Keyboard 0
+<br>
+<dd>
+<br>
+<dd>  Die Liste der gerade aktuellen States
+<br>
+<dd>  findet man unter '/sys/share/input/states'.
+<br>
+<dd>
+<br>
+<dd>  Ein paar Beispiele fuer komplette Mappings:
+<br>
+<dd>    .map joy0:-x move_left
+<br>
+<dd>    .map joy0:+x move_right
+<br>
+<dd>    .map joy0:-y move_down
+<br>
+<dd>    .map joy0:+y move_up
+<br>
+<dd>    .map keyb0:f1.down "script:incr x"
+<br>
+<dd>    .map keyb0:f2.down "script:newv sammler"
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserverendmap"><b>endmap</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schliesst einen Block von Mapping-Definitionen ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputservergetslider"><b>getslider</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (InputState)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Value)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den Zustand des angegebenen InputState
+<br>
+<dd>  als analogen Slider-Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputservergetbutton"><b>getbutton</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (InputState)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (ButtonPressed)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den Zustand des angegebenen InputState
+<br>
+<dd>  als Button. Je nach definierten Input-Mapping
+<br>
+<dd>  kommt die Routine true zurueck, wenn:
+<br>
+<dd>  - der Button unten ist (.pressed)
+<br>
+<dd>  - der Button niedergedrueckt wurde (.down)
+<br>
+<dd>  - der Button losgelassen wurde (.up)
+<br>
+<dd>  - der Button schon laenger gedrueckt ist (.long)
+<br>
+<dd>  - der Button doppelt geclickt wurde (.double)
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserversetlongpressedtime"><b>setlongpressedtime</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (LongPressedTime)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setze Zeitspanne fuer das Eintreten des Longpressed-
+<br>
+<dd>  Zustands eines Input-Mappings.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputservergetlongpressedtime"><b>getlongpressedtime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (LongPressedTime)
+<br>
+<dd>  INFO
+<br>
+<dd>  Frage den per 'setlongpressedtime' eingestellten Wert ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputserversetdoubleclicktime"><b>setdoubleclicktime</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (DoubleClickTime)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setze Zeitinterval fuer einen Doppelklick.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ninputservergetdoubleclicktime"><b>getdoubleclicktime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (DoubleClickTime)
+<br>
+<dd>  INFO
+<br>
+<dd>  Frage den per 'setdoubleclicktime' eingestellten Wert ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/input/nlxinp_dispatch.cc<br>
+ <a name="nlxinputserver">
+<h1>nlxinputserver</h1>
+ <a name="nlxinputserver"> <dd><b>Superklasse: ninputserver</b><br>
+<dd>  INFO
+<br>
+<dd>  Dieser Joystick-Server implementiert Joystick-
+<br>
+<dd>  Support unter Linux (ueber 'dev/js?'). Zur Zeit
+<br>
+<dd>  werden nur max. 2 angeschlossene Joysticks
+<br>
+<dd>  unterstuetzt, Informationen dazu findet man
+<br>
+<dd>  unter '/sys/share/input'.
+<br>
+<dd>---------------------------------------------------------
+<br>
+
+<hr> code/src/kernel/nenv_cmds.cc<br>
+ <a name="nenv">
+<h1>nenv</h1>
+ <a name="nenv"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nenv Klasse ist was aehnliches wie eine Environment-
+<br>
+<dd>  Variable. Einfach erzeugen, getypten Wert setzen und
+<br>
+<dd>  abfragen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvgettype"><b>gettype</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Type = [void int float bool string object]
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den Datentyp zurueck, auf den die Variable
+<br>
+<dd>  gesetzt ist. Falls "void" zurueckkommt, ist die
+<br>
+<dd>  Variable leer.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvgeti"><b>geti</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (Value)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den Inhalt der Variable zurueck, wenn es eine
+<br>
+<dd>  Int-Variable ist. Wenn es keine Int-Variable ist,
+<br>
+<dd>  kommt 0 zurueck, und eine Fehlermeldung.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvgetf"><b>getf</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Value)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den Inhalt der Variable zurueck, wenn es eine
+<br>
+<dd>  Float-Variable ist, sonst kommt 0.0 zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvgetb"><b>getb</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Value)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den Inhalt der Variable zurueck, wenn es eine
+<br>
+<dd>  Bool-Variable ist, sonst kommt false zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvgets"><b>gets</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Value)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den Inhalt der Variable zurueck, wenn es eine
+<br>
+<dd>  String-Variable ist, sonst kommt "<error>" zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvgeto"><b>geto</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  o (ObjectHandle)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den Inhalt der Variable als ObjektHandle zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvseti"><b>seti</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Value)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Inhalt der Variable auf Integer-Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvsetf"><b>setf</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Value)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Inhalt der Variable auf Float-Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvsetb"><b>setb</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (Value)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Inhalt der Variable auf Bool-Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvsets"><b>sets</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Value)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Inhalt der Variable auf String-Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nenvseto"><b>seto</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (ObjectHandle)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt den Inhalt der Variable auf ein ObjektHandle.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/kernel/nfile_cmds.cc<br>
+ <a name="nfileserver">
+<h1>nfileserver</h1>
+ <a name="nfileserver"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Das nFileServer-Objekt ist unter dem Namen /sys/servers/file
+<br>
+<dd>  zu finden und bietet ein paar Kommandos an, mit dem man die
+<br>
+<dd>  Art und Weise beeinflussen kann, wie Objekt abgespeichert
+<br>
+<dd>  werden. Alle Load/Save-Operationen von Objekten gehen letztenendes
+<br>
+<dd>  durch den Fileserver, das ist eigentlich alles, was man dazu
+<br>
+<dd>  wissen muss...
+<br>
+<dd>  Zusaetzlich bietet der FileServer ein Interface zum Definieren
+<br>
+<dd>  und Aufloesen von Assigns.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nfileserversetsavemode"><b>setsavemode</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Savemode = [fold,unfold])
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Stellt den Savemode fuer Objekte ein. 'fold' heisst,
+<br>
+<dd>  Objekt-Hierarchien werden in einen einzigen Ascii-
+<br>
+<dd>  File gesichert, der den Namen des Objekts traegt.
+<br>
+<dd>  'unfold' erzeugt eine Directory-Hierarchie.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nfileservergetsavemode"><b>getsavemode</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Savemode = [fold,unfold])
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den gerade eingestellten Savemode.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nfileserversetassign"><b>setassign</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Assign), s (Path)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert ein neues Assign. Das ist in Nebula ein
+<br>
+<dd>  einfaches Text-Alias, welches per 'getassign' oder
+<br>
+<dd>  'manglepath' in einen Pfad-String umgewandelt werden
+<br>
+<dd>  kann.
+<br>
+<dd>  Das Assign darf bei der Definition KEINEN Doppelpunkt
+<br>
+<dd>  enthalten, der Pfad MUSS als Pfadseparatoren '/'
+<br>
+<dd>  verwenden, und muss auch auf ein '/' enden.
+<br>
+<dd>  Doppelpunkte im Pfad sind erlaubt (zum Beispiel DOS-
+<br>
+<dd>  Laufwerksbuchstaben), werden aber deshalb nicht
+<br>
+<dd>  rekursiv aufgeloest.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nfileservergetassign"><b>getassign</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Assign)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Path)
+<br>
+<dd>  INFO
+<br>
+<dd>  Wandelt ein Assign in seinen Pfad um. Das Assign darf
+<br>
+<dd>  keinen Doppelpunkt enthalten. Falls das Assign
+<br>
+<dd>  nicht definiert wurde, kommt "<error>" zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nfileservermanglepath"><b>manglepath</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Inpath)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Outpath)
+<br>
+<dd>  INFO
+<br>
+<dd>  Loest Assigns in der uebergebenen Pfad-Definition
+<br>
+<dd>  auf, und gibt den resultierenden Pfad zurueck.
+<br>
+<dd>  Das Assign muss mit einem abschliessenden ':'
+<br>
+<dd>  gekennzeichnet sein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/kernel/nroot_cmds.cc<br>
+ <a name="nroot">
+<h1>nroot</h1>
+ <a name="nroot"> <dd><b>Superklasse: ---</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nRoot Klasse ist die Superklasse des Nebula-Systems,
+<br>
+<dd>  alle anderen "richtigen" Klassen sind von der Rootklasse
+<br>
+<dd>  abgeleitet. Die nRoot Klasse definiert folgende
+<br>
+<dd>  Eigenschaften, welche von allen Subklassen geerbt werden:
+<br>
+<dd>  - Einordnung in einen hierarchischen Namespace, inklusive
+<br>
+<dd>    Kommandos, um die Hierarchie zu durchsuchen.
+<br>
+<dd>  - Runtime-Type-Information (welcher Klasse gehoert ein
+<br>
+<dd>    Objekt an, und welche Version hat diese Klasse)
+<br>
+<dd>  - Objekt-Persistenz (laden/speichern von Objekten)
+<br>
+<dd>  - sprachneutrales Script-Interface
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetrefcount"><b>getrefcount</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (Refcount)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt aktuellen Refcount des Objects zurueck, also wieviele
+<br>
+<dd>  Benutzer das Objekt hat.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetrefs"><b>getrefs</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (RefList)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die Liste aller Objekte zurueck, die einen Pointer
+<br>
+<dd>  auf mich besitzen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetclass"><b>getclass</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Classname)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt Name der Klasse zurueck, der das Objekt angehoert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootisa"><b>isa</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Classname)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Ermittelt ob das Objekt Mitglied der uebergebenen Klasse,
+<br>
+<dd>  oder einer ihrer Superklassen ist.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootisinstanceof"><b>isinstanceof</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Classname)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Ermittelt ob das Objekt Mitglied der uebergebenen Klasse
+<br>
+<dd>  ist, im Unterschied zu 'isa' werden Superklassen
+<br>
+<dd>  nicht beachtet.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetversion"><b>getversion</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Versionstring)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den Versionsstring des Klassen-Moduls zurueck,
+<br>
+<dd>  der das Objekt angehoert. Im Versionsstring sind
+<br>
+<dd>  kodiert: Plattform, Compiler, Prozessor, Datum und
+<br>
+<dd>  Uhrzeit der Kompilierung, sowie der Klassenname.
+<br>
+<dd>  Beispiel:
+<br>
+<dd>  win32-vc-i386-Dec 22 1998-22:06:02-nkernel
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetcmds"><b>getcmds</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Commands)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt eine Liste aller vom Objekt akzeptierten
+<br>
+<dd>  Kommandos in Form eines sehr langen Strings
+<br>
+<dd>  zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootsave"><b>save</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Sichert das Objekt unter seinem aktuellen Namen
+<br>
+<dd>  ins Filesystem.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootsaveas"><b>saveas</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Name)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Sichert das Objekt unter dem angegebenen Namen ins
+<br>
+<dd>  Filesystem.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootclone"><b>clone</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (CloneName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  o (CloneHandle)
+<br>
+<dd>  INFO
+<br>
+<dd>  Erzeugt einen Clone des Objekts unter dem angegebenen
+<br>
+<dd>  Namen. Der Clone ist ab diesem Augenblick ein vollstaendig
+<br>
+<dd>  eigenstaendiges Objekt. Wenn das Original-Objekt Subobjekte
+<br>
+<dd>  besitzt, werden diese mitgeclont.
+<br>
+<dd>  *** 21-Jun-99 ***
+<br>
+<dd>  Returniert jetzt nicht mehr 'bool', sondern 'object'
+<br>
+<dd>  des Clones. Bei Misslingen wird 'null' zurueckgegeben.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootparse"><b>parse</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Wendet alle Kommandos im uebergebenen Script auf das
+<br>
+<dd>  Objekt an. Bei dem Script sollte es sich um einen
+<br>
+<dd>  ordentlichen ".n" File handeln, mit "$class:$" und
+<br>
+<dd>  "$parser:$" Statements.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetparent"><b>getparent</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  o (ObjectHandle)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert Objekt-Handle (== voller Pfadname) des
+<br>
+<dd>  Parent-Objekts.
+<br>
+<dd>  Falls das Objekt keine Parent-Objekt besitzt
+<br>
+<dd>  (das ist nur das Root-Objekt '/') wird 'null'
+<br>
+<dd>  zurueckgegeben.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgethead"><b>gethead</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  o (ObjectHandle)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den vollen Pfadnamen des ersten Subobjekts zurueck,
+<br>
+<dd>  oder 'null', wenn das Objekt keine Subobjekte hat.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgettail"><b>gettail</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  o (ObjectHandle)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den vollen Pfadnamen des letzten Subobjekts zurueck,
+<br>
+<dd>  oder 'null', wenn das Objekt keine Subobjekte hat.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetsucc"><b>getsucc</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  o (ObjectHandle)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den vollen Pfadnamen des naechsten Objekts auf
+<br>
+<dd>  derselben Hierarchie-Ebene zurueck, oder 'null',
+<br>
+<dd>  wenn das Objekt keinen Nachfolger hat.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetpred"><b>getpred</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  o (ObjectHandle)
+<br>
+<dd>  Gibt den vollen Pfadnamen des vorigen Objekts auf
+<br>
+<dd>  derselben Hierarchie-Ebene zurueck, oder 'null',
+<br>
+<dd>  wenn das Objekt keinen Vorgaenger hat.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootsetname"><b>setname</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Name)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt den Namen des Objekts (dabei muss das Objekt
+<br>
+<dd>  im selben Directory bleiben!).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetname"><b>getname</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Name)
+<br>
+<dd>  INFO
+<br>
+<dd>  Ermittelt den 'Filenamen' des Objekts ohne Pfad-
+<br>
+<dd>  Komponente.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootgetfullname"><b>getfullname</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Name)
+<br>
+<dd>  INFO
+<br>
+<dd>  Ermittelt den vollen Pfadnamen des Objekts und returniert
+<br>
+<dd>  ihn als String.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootfind"><b>find</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Name)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Ermittelt, ob das Objekt ein Subobjekt des angegebenen
+<br>
+<dd>  Namens hat. Dabei muss es sich um ein unmittelbares
+<br>
+<dd>  Subobject handeln, die Suche funktioniert nicht ueber
+<br>
+<dd>  mehrere Directory-Ebenen.
+<br>
+<dd>  *** 21-Jun-99 ***
+<br>
+<dd>  Gibt jetzt nicht mehr 'bool', sondern 'object' (voller
+<br>
+<dd>  Pfadname) zurueck, oder 'null', wenn Suche negativ.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nrootsort"><b>sort</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Sortiert alle Subobjekte alphabetisch.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/kernel/ntime_cmds.cc<br>
+ <a name="ntimeserver">
+<h1>ntimeserver</h1>
+ <a name="ntimeserver"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  The ntimeserver object lives under the name /sys/servers/time
+<br>
+<dd>  and provides a central time source for Nebula.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeserverresettime"><b>resettime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Reset global time to 0.0.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeserverstoptime"><b>stoptime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Freeze global time.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeserverstarttime"><b>starttime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Unfreeze global time.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeservergettime"><b>gettime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Time)
+<br>
+<dd>  INFO
+<br>
+<dd>  Return current global time in seconds since the time server
+<br>
+<dd>  was created.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeserversettime"><b>settime</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Time)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set global time in seconds.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeserverlockdeltat"><b>lockdeltat</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (DeltaT)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  If DeltaT is greater then 0.0, the frame time will be advanced
+<br>
+<dd>  in steps of size DeltaT. A value of 0.0 switches back to the
+<br>
+<dd>  proper timing behaviour. Useful to lock virtual frame rate to
+<br>
+<dd>  a fixed value.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeserverwaitdeltat"><b>waitdeltat</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (DeltaT)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  If DeltaT is greater then 0.0, then the time server will
+<br>
+<dd>  actually sleep this amount of time in each frame. This is
+<br>
+<dd>  usefull to simulate a slow machine.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeservergetlockdeltat"><b>getlockdeltat</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (DeltaT)
+<br>
+<dd>  INFO
+<br>
+<dd>  Return the value set by 'lockdeltat'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeservergetwaitdeltat"><b>getwaitdeltat</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (DeltaT)
+<br>
+<dd>  INFO
+<br>
+<dd>  Return the value set by 'waitdeltat'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeserverenableframetime"><b>enableframetime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Enable the 'frame time' mode of the 'getframetime'
+<br>
+<dd>  command. In this mode 'getframetime' will return exactly
+<br>
+<dd>  the same value each time it is called within a frame.
+<br>
+<dd>  Otherwise 'getframetime' returns the same value 'gettime'
+<br>
+<dd>  would.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeserverdisableframetime"><b>disableframetime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Turn off frame time mode of 'getframetime'. Further
+<br>
+<dd>  calls to 'getframetime' will return exactly the same value
+<br>
+<dd>  as 'gettime'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntimeservergetframetime"><b>getframetime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the current frame time stamp. This value differs from the
+<br>
+<dd>  value returned by 'gettime' because 'gettime' will return
+<br>
+<dd>  a different value each time it is called, while 'getframetime'
+<br>
+<dd>  returns the same timestamp within one frame.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/misc/ncsrv_cmds.cc<br>
+ <a name="nconserver">
+<h1>nconserver</h1>
+ <a name="nconserver"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Der Console-Server lebt unter dem Namen "/sys/servers/console"
+<br>
+<dd>  und implementiert eine interaktive Ingame-Konsole im aktullen
+<br>
+<dd>  Grafikmodus. Damit der Konsole-Server funktioniert, muessen
+<br>
+<dd>  folgende Objekte existieren:
+<br>
+<dd>      /sys/servers/input
+<br>
+<dd>      /sys/servers/gfx
+<br>
+<dd>      /sys/servers/script
+<br>
+<dd>  Der Console-Server wird per Druck auf "Escape" aktiviert und
+<br>
+<dd>  faengt ab dann alle Tasten-Ereignisse ab. Wenn aktiviert,
+<br>
+<dd>  alle Tasteneingaben werden daraufhin als Kommandozeilen-
+<br>
+<dd>  Input interpretiert und die resultierenden Kommandos an
+<br>
+<dd>  den Script-Server gegegeben.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nconserveropen"><b>open</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Aktiviert die Konsole, dass kann auch per
+<br>
+<dd>  Tastendruck (Escape) passieren.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nconserverclose"><b>close</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Schliesst die Konsole.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nconservertoggle"><b>toggle</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Toggle Konsolen-Status.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nconserverwatch"><b>watch</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Pattern)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Hiermit lassen sich die diversen Status-Variablen
+<br>
+<dd>  unter '/sys/var' beobachten. Per Patternmatching
+<br>
+<dd>  kann man eine Auswahl treffen, welche Variablen bei
+<br>
+<dd>  geschlossener Konsole angezeigt werden sollen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nconserverunwatch"><b>unwatch</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet den mit 'watch' aktivierten Beobachtungsmodus
+<br>
+<dd>  wieder ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/misc/nisland_cmds.cc<br>
+ <a name="nisland">
+<h1>nisland</h1>
+ <a name="nisland"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Klebt zwei nPlatform Objekte aneinander, was eine fliegende
+<br>
+<dd>  Insel darstellen soll.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsettopheightfield"><b>settopheightfield</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Filename des BMP Files, der die Hoehenmap fuer den
+<br>
+<dd>  "Deckel" definiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgettopheightfield"><b>gettopheightfield</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den per 'settopheightfield' definierten Filename ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsetbtmheightfield"><b>setbtmheightfield</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Filename des BMP Files, der die Hoehenmap fuer den
+<br>
+<dd>  Unterboden definiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgetbtmheightfield"><b>getbtmheightfield</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den per 'setbtmheightfield' definierten Filename ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsetlodscale"><b>setlodscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (LodScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt LOD-Scale-Wert. Groessere Werte ergeben einen
+<br>
+<dd>  hoeheren Triangle-Count.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgetlodscale"><b>getlodscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (LodScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setlodscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsetborderlodscale"><b>setborderlodscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (BorderLodScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Border-LOD-Scale-Wert. Dieser bestimmt, ab welcher
+<br>
+<dd>  Entfernung die Genauigkeit des Insel-Randes jeweils halbiert
+<br>
+<dd>  wird. Default-Wert ist 250, das scheint mir ein guenstiger
+<br>
+<dd>  Wert fuer eine 128x128-Insel.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgetborderlodscale"><b>getborderlodscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (BorderLodScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setborderlodscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsettopxyzscale"><b>settopxyzscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (XScale), f (YScale), f (ZScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die 3 Scale-Werte fuer die Oberseite, mit denen die
+<br>
+<dd>  Ausdehnung der Heightmap in das Welt-Koordinaten-System
+<br>
+<dd>  transformiert wird.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgettopxyzscale"><b>gettopxyzscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (XScale), f (YScale), f (ZScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die per 'settopxyzscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsetbtmxyzscale"><b>setbtmxyzscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (XScale), f (YScale), f (ZScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die 3 Scale-Werte fuer die Unterseite, mit denen die
+<br>
+<dd>  Ausdehnung der Heightmap in das Welt-Koordinaten-System
+<br>
+<dd>  transformiert wird.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgetbtmxyzscale"><b>getbtmxyzscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (XScale), f (YScale), f (ZScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die per 'setbtmxyzscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsetuvscale"><b>setuvscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (UvScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Skalierer fuer die Textur-Koordinaten-Generierung.
+<br>
+<dd>  u = x * scale
+<br>
+<dd>  v = z * scale
+<br>
+<dd>  Default ist 0.05f.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgetuvscale"><b>getuvscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (UvScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setuvscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsetclipheight"><b>setclipheight</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (ClipHeight)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die Clip-Height, das ist die Hoehe des "Meeres-
+<br>
+<dd>  Spiegels" NACHDEM xyz_scale reingerechnet ist.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgetclipheight"><b>getclipheight</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (ClipHeight)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setclipheight' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandsetclipenable"><b>setclipenable</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (ClipEnable)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet Meeresspiegel-Clipping an/aus (Direct3D V6 unterstuetzt
+<br>
+<dd>  keine Clip-Planes und wuerde Fehler-Meldungen bringen).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nislandgetclipenable"><b>getclipenable</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (ClipEnable)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setclipenable' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/misc/nmath_dispatch.cc<br>
+ <a name="nmathserver">
+<h1>nmathserver</h1>
+ <a name="nmathserver"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Der nMathServer lebt unter dem Namen /sys/servers/math und
+<br>
+<dd>  implementiert eine auf Vektor-Array-Operationen spezialisierte
+<br>
+<dd>  Software-FPU. Die Idee ist, eine genau definierte
+<br>
+<dd>  zentrale Stelle fuer fette Operationen auf Matrizen und Vektor-
+<br>
+<dd>  Arrays zu haben, die sich massiv und ohne Ruecksicht auf
+<br>
+<dd>  Nebeneffekte oder Universalitaet nehmen zu muessen optimieren
+<br>
+<dd>  laesst. Ausserdem ist dies der Ansatzpunkt fuer spezielle
+<br>
+<dd>  "hardware-beschleunigte" Klasse, die zum Beispiel
+<br>
+<dd>  Assembler-, KNI- oder 3DNow-Instruktionen verwenden.
+<br>
+<dd>  Es hat sich gezeigt dass eine aehnlich aggressive Optimierung
+<br>
+<dd>  mit C++-Inline-Klassen entweder zu komplex ist, oder den
+<br>
+<dd>  Code widernatuerlich aufblaeht. Trotzdem sind fuer "Wald-und-
+<br>
+<dd>  Wiesen-Operationen", die keine grossen Arrays bearbeiten,
+<br>
+<dd>  oder viele Matrix-Operationen hintereinander ausfuehren die
+<br>
+<dd>  ueblichen Inline-C++-Klasse die bessere Wahl (wegen dem
+<br>
+<dd>  Function Call Overhead und den schlechteren Optimierungs-
+<br>
+<dd>  Moeglichkeiten fuer den Compiler in solchen Faellen). Man sollte
+<br>
+<dd>  also gut abwaegen (und evtl profilen), welche Methode man anwendet.
+<br>
+<dd>--------------------------------------------------------------------
+<br>
+
+<hr> code/src/misc/nobs_cmds.cc<br>
+ <a name="nobserver">
+<h1>nobserver</h1>
+ <a name="nobserver"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Flexiblerer Ersatz fuer gfxserv.exe. Folgende Objekte
+<br>
+<dd>  muessen bereits initialisiert sein:
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nobserverstart"><b>start</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Startet die Renderloop. Die Methode kommt erst zurueck,
+<br>
+<dd>  wenn:
+<br>
+<dd>  - das Fenster geschlossen wird
+<br>
+<dd>  - das 'exit' Scriptkommando ausgefuehrt wurde
+<br>
+<dd>  - das 'stop' Kommando auf den nobserver angewendet wurde
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nobserverstop"><b>stop</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt das interne Stop-Flag.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nobserverstartsinglestep"><b>startsinglestep</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Startet Observer im Single-Step-Modus.
+<br>
+<dd>
+<br>
+<dd>  Beispiel:
+<br>
+<dd>
+<br>
+<dd>  /sys/servers/time.lockdeltat 0.2
+<br>
+<dd>  .startsinglestep
+<br>
+<dd>  while {.rendersinglestep == "true"} {
+<br>
+<dd>      # do what you want
+<br>
+<dd>  }
+<br>
+<dd>  /sys/servers/time.unlockdeltat
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nobserverrendersinglestep"><b>rendersinglestep</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Running)
+<br>
+<dd>  INFO
+<br>
+<dd>  Rendert einen einzelnen Frame im Single-Frame-Modus.
+<br>
+<dd>  Siehe 'startsinglestep' fuer ein Code-Beispiel.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nobserversetsleep"><b>setsleep</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (SleepTime)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die Multitasking-freundliche Sleep-Time
+<br>
+<dd>  per Frame in Sekunden. Default ist 0.02.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nobservergetsleep"><b>getsleep</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (SleepTime)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setsleep' definierten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nobserversetgrid"><b>setgrid</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (ShowGrid)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet das Boden-Gitter an/aus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nobservergetgrid"><b>getgrid</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (ShowGrid)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setgrid' definierten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/misc/noctree_cmds.cc<br>
+ <a name="noctree">
+<h1>noctree</h1>
+ <a name="noctree"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Die noctree-Klasse ist ein Octree-Raum-Partitioner. Elemente,
+<br>
+<dd>  die durch Position und Radius definiert sind, werden angehaengt,
+<br>
+<dd>  der Octree sorgt dafuer, dass sie moeglichst in
+<br>
+<dd>  verschachtelten Raumwuerfeln einsortiert werden, die eine
+<br>
+<dd>  optimalere raeumliche Suche ermoeglichen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="noctreesetsubdivnum"><b>setsubdivnum</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (NumElements)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert, wieviele Elemente maximal pro Octree-Node
+<br>
+<dd>  zugelassen sind, bevor sie unterteilt wird und deren
+<br>
+<dd>  Elemente auf die neuen Subwuerfel verteilt werden.
+<br>
+<dd>  Default: 4
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="noctreegetsubdivnum"><b>getsubdivnum</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (NumElements)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den per 'setsubdivnum' eingestellten Wert zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="noctreesetvisualize"><b>setvisualize</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (Visualize)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet den Visualize-Modus des Octrees an/aus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="noctreegetvisualize"><b>getvisualize</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Visualize)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den aktuellen Zustand des Visualize-Flags ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/misc/nplatform_cmds.cc<br>
+ <a name="nplatform">
+<h1>nplatform</h1>
+ <a name="nplatform"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Einfach Landschaftsrenderer.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformsetheightfield"><b>setheightfield</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Filename des BMP Files, aus dem das Heightfield
+<br>
+<dd>  initialisiert wird. Der Rot-Kanal definiert die Hoehe.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformgetheightfield"><b>getheightfield</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Filename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den per 'setheightfield' definierten Filename ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformsetlodscale"><b>setlodscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (LodScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt LOD-Scale-Wert. Groessere Werte ergeben einen
+<br>
+<dd>  hoeheren Triangle-Count.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformgetlodscale"><b>getlodscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (LodScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setlodscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformsetborderlodscale"><b>setborderlodscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (BorderLodScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Border-LOD-Scale-Wert. Dieser bestimmt, ab welcher
+<br>
+<dd>  Entfernung die Genauigkeit des Insel-Randes jeweils halbiert
+<br>
+<dd>  wird. Default-Wert ist 250, das scheint mir ein guenstiger
+<br>
+<dd>  Wert fuer eine 128x128-Insel.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformgetborderlodscale"><b>getborderlodscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (BorderLodScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setborderlodscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformsetxyzscale"><b>setxyzscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (XScale), f (YScale), f (ZScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die 3 Scale-Werte, mit denen die Ausdehnung
+<br>
+<dd>  der Heightmap in das Welt-Koordinaten-System
+<br>
+<dd>  transformiert wird.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformgetxyzscale"><b>getxyzscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (XScale), f (YScale), f (ZScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die per 'setxyzscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformsetuvscale"><b>setuvscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (UvScale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt Skalierer fuer die Textur-Koordinaten-Generierung.
+<br>
+<dd>  u = x * scale
+<br>
+<dd>  v = z * scale
+<br>
+<dd>  Default ist 0.05f.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformgetuvscale"><b>getuvscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (UvScale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setuvscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformsetclipheight"><b>setclipheight</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (ClipHeight)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die Clip-Height, das ist die Hoehe des "Meeres-
+<br>
+<dd>  Spiegels" NACHDEM xyz_scale reingerechnet ist.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformgetclipheight"><b>getclipheight</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (ClipHeight)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setclipheight' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformsetclipenable"><b>setclipenable</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (ClipEnable)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet Meeresspiegel-Clipping an/aus (Direct3D V6 unterstuetzt
+<br>
+<dd>  keine Clip-Planes und wuerde Fehler-Meldungen bringen).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformgetclipenable"><b>getclipenable</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (ClipEnable)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setclipenable' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformsetinverted"><b>setinverted</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (Inverted)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet Invertierung an/aus. Ein invertiertes nPlatform
+<br>
+<dd>  Object wird in Y gespiegelt behandelt, zum Beispiel fuer
+<br>
+<dd>  eine Insel-Unterseite.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformgetinverted"><b>getinverted</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Inverted)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setinverted' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nplatformintersecttopdown"><b>intersecttopdown</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (PosX), f (PosY), f (PosZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  f (PosX), f (PosY), f (PosZ),
+<br>
+<dd>  f (NormX), f (NormY), f (NormZ)
+<br>
+<dd>  INFO
+<br>
+<dd>  Testet auf Intersection mit dem Heightfield entlang
+<br>
+<dd>  des vertikalen Vektors definiert durch (PosX,PosZ).
+<br>
+<dd>  Bei Erfolg wird 'true', sowie die exakte Intersection-
+<br>
+<dd>  Position und die zugehoerige Flaechen-Normale
+<br>
+<dd>  zurueckgegeben.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/misc/npserv_cmds.cc<br>
+ <a name="nparticleserver">
+<h1>nparticleserver</h1>
+ <a name="nparticleserver"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Manages particle system contexts.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticleserveractivate"><b>activate</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Internal, for testing only.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticleserverdeactivate"><b>deactivate</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Internal, for testing only.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticleserverisactive"><b>isactive</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Activated)
+<br>
+<dd>  INFO
+<br>
+<dd>  Internal, for testing only.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/network/ndp_script.cc<br>
+ <a name="ndplay">
+<h1>ndplay</h1>
+ <a name="ndplay"> <dd><b>Superklasse: nnetwork</b><br>
+<dd>  INFO
+<br>
+<dd>  Realisierung eines Netzinterfaces fuer DirectPlay .
+<br>
+<dd>--------------------------------------------------------------------
+<br>
+
+<hr> code/src/network/nnet_script.cc<br>
+ <a name="nnetwork">
+<h1>nnetwork</h1>
+ <a name="nnetwork"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Das netzinterface. Superklasse fuer DPlay, Socket, Feldtelefone
+<br>
+<dd>  u.a.
+<br>
+<dd>  Nur Subklassen verwenden.
+<br>
+<dd>--------------------------------------------------------------------
+<br>
+ <a name="nnetworkinitguid"><b>initguid</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> 16 * i
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> b - true, wenn Aenderung noch erlaubt war
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Wir brauchen immer eine GUID. Weil Windows diese nutzt,
+<br>
+<dd> nehmen wir sie natuerlich auch fuer Sockets. Sinn dieser
+<br>
+<dd> GUID ist die Identifizierung des Spieles. Sie muss vor
+<br>
+<dd> dem Oeffnen/Joinen gesetzt werden.
+<br>
+ <a name="nnetworkgetguid"><b>getguid</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> 16 * i
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> s.o.
+<br>
+ <a name="nnetworksetsenddelay"><b>setsenddelay</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> f - Sendeverzoegerung
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Senddelay gibt an, wie lange Message intern vor dem
+<br>
+<dd> Senden gepuffert werden. Muss nicht gesetzt sein.
+<br>
+ <a name="nnetworkgetsenddelay"><b>getsenddelay</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> f - senddelay in s
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Gibt die derzeitige maximale pufferzeit
+<br>
+<dd> fuer Messages zurueck.
+<br>
+ <a name="nnetworkaskprovider"><b>askprovider</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd>
+<br>
+<dd> i - Zahl der gefundenen Provider, bei 0 kann
+<br>
+<dd>     man von einem fehler ausgehen
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Die daten zu den Providern liegen im Verzeichnis
+<br>
+<dd> /sys/share/provider. Der erste provider hat das Verzeichnis
+<br>
+<dd> 1 usw.  Innerhalb dieses Verzeichnisses liegen die String-
+<br>
+<dd> Variablen name, class (enthaelt Klassenname) und guid (enthaelt
+<br>
+<dd> GUID des providers)
+<br>
+ <a name="nnetworksetprovider"><b>setprovider</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> i - Nummer des providers, von 1 ab gezaehlt.
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> i - 0 oder Fehler
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Vorraussetzung ist ein ausgefuelltes provider-Verzeichnis
+<br>
+<dd> in /sys/share
+<br>
+ <a name="nnetworkasksessions"><b>asksessions</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd>
+<br>
+<dd> b - true, wenn nicht broadcast
+<br>
+<dd> s - Adresse, wo ich suchen soll (a.b.c.d - Form)
+<br>
+<dd> i - Port dazu
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> i - Anzahl der gefundenen Sessions
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> analog getprovider. Es gibt ein Verzeichnis sessions
+<br>
+<dd> unter /sys/share/ mit den Subverzeichnissen 1, 2 ...
+<br>
+<dd> In selbigen gibt es die Eintraege:
+<br>
+<dd> name        sessionname                String
+<br>
+<dd> host        hostname                   String
+<br>
+<dd> guid        Session-Id (16 Zahlen)     String
+<br>
+<dd> address     TCP/IP-Adresse (a.b.c.d)   String
+<br>
+<dd> port        Portnummer                 Integer
+<br>
+<dd> num_players Zahl der Spieler           Integer
+<br>
+<dd> max_players Maximalzahl fuer die S.    Integer
+<br>
+<dd> flags       Besondere Einstellungen    Integer
+<br>
+ <a name="nnetworkopensession"><b>opensession</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd>
+<br>
+<dd> s - session_name, ebenso
+<br>
+<dd> i - flags
+<br>
+<dd> i - maxnum players oder 0, wenn N_MAXNUM_PLAYERS
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd>
+<br>
+<dd> i - 0 oder fehlercode
+<br>
+<dd> i - namens_id falls alles ok
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> oeffnet eine Session, Daten siehe INPUT
+<br>
+ <a name="nnetworkjoinsession"><b>joinsession</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd>
+<br>
+<dd> i - Nummer der Session, beginnend mit 1
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd>
+<br>
+<dd> i - 0 oder Fehlercode
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Verzeichnisse in /sys/share/sessions muessen existieren.
+<br>
+ <a name="nnetworkclosesession"><b>closesession</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> i - 0 oder Fehlercode
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Schliesst die Session, in der ich gerade bin
+<br>
+ <a name="nnetworklock"><b>lock</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> i - true: locked session, false macht sie wieder joinbar
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> i - 0 oder Fehlercode
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> sperrt Session fuer das Joinen anderer Spieler
+<br>
+ <a name="nnetworkgetsessionstatus"><b>getsessionstatus</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> s - "none", "join" oder "host" , je nach status
+<br>
+<dd> b - gelocked oder nicht...
+<br>
+<dd> i - Zahl der Spieler
+<br>
+<dd> i - Maximalzahl der Spieler
+<br>
+<dd> s - name der Session oder "none"
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Liefert Daten ueber die Session zurueck, siehe OUTPUT
+<br>
+ <a name="nnetworkkickoffplayer"><b>kickoffplayer</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> i - names_id desjenigen, der raus muss
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> i - 0 oder Fehler
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Schmeisst einen Spieler raus
+<br>
+ <a name="nnetworkgethostid"><b>gethostid</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> i - namens-id
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Zurueckgegeben wird der Name des Hostes, also die
+<br>
+<dd> ID, unter der er zu erreichen ist. Die Assoziation
+<br>
+<dd> des Engine-Namens mit einem realen spielernamen ist
+<br>
+<dd> nicht Sache der engine.
+<br>
+<dd> Existiert kein Host, wird -1 zurueckgegeben.
+<br>
+ <a name="nnetworkaskglobaltime"><b>askglobaltime</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Initiiert (,wenn wir uns einer Session angeschlossen
+<br>
+<dd> haben !!!) eine Ermittlung der globalen Zeit vom
+<br>
+<dd> Host. Wird automatisch erledigt (beim Joinen) und kann
+<br>
+<dd> mittels getglobaltime erfragt werden.
+<br>
+ <a name="nnetworkgetglobaltime"><b>getglobaltime</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> bf
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Gibt die globale Zeit zurueck. Der bool-Wert sagt aus, ob die
+<br>
+<dd> Zeit gueltig ist, denn es kann sein, dass der Zeitermitt-
+<br>
+<dd> lungsvorgang noch nicht abgeschlossen ist.
+<br>
+ <a name="nnetworkgetlatencyinfo"><b>getlatencyinfo</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> s    - nummer des Spielers oder "all"
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> b    - true, wenn Soieler existiert
+<br>
+<dd> fff  - latency, durchschnitt, maximum
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Gibt die latencyinfos zu einem Spieler oder
+<br>
+<dd> allen ("all"), dann als Durchschnitt, zurueck.
+<br>
+<dd> Zuerst kommt der aktuelle latencywert, dann
+<br>
+<dd> der durchschnitt der letzten (10) Messungen
+<br>
+<dd> und zum Schluss das Maximum.
+<br>
+<dd>
+<br>
+<dd> Anfragen an mich haben keinen sinn, dann geben
+<br>
+<dd> wir wie bei einem nicht vorhandenen spieler
+<br>
+<dd> false zurueck
+<br>
+ <a name="nnetworkgetstatistics"><b>getstatistics</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> b      - true, wenn daten aktuell sind
+<br>
+<dd> 10 * i - (s.u).
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Gibt Infos ueber die Send- und Receivestatistik zurueck.
+<br>
+<dd> Das sind ne Menge daten, die spaeter evtl. mal noch in
+<br>
+<dd> Env-Variablen kommen.
+<br>
+<dd> Zuerst kommt ein Bool'scher Wert der aussagt, ob die daten
+<br>
+<dd> ok sind. Dann kommen je 5 daten fuer Send und 5 daten fuer
+<br>
+<dd> Receive. Die Reihenfolge ist max, min und Durchschnitt der
+<br>
+<dd> Messagegroesse, dann kommt die Zahl der Bytes pro Sekunde
+<br>
+<dd> (berechnet innerhalb der letzten 10 sec) und danach noch
+<br>
+<dd> das Maximum fuer selbiges.
+<br>
+
+<hr> code/src/network/nsock_script.cc<br>
+ <a name="nsocket">
+<h1>nsocket</h1>
+ <a name="nsocket"> <dd><b>Superklasse: nnetwork</b><br>
+<dd>  INFO
+<br>
+<dd>  Realisiert Socket-Interface fuer Netzwerk.
+<br>
+<dd>--------------------------------------------------------------------
+<br>
+ <a name="nsocketinitport"><b>initport</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> i - portnummer
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> b - true, wenn die Aenderung noch moeglich war
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Setzt den port, sofern es noch erlaubt ist (die Session
+<br>
+<dd> noch nicht begonnen hat).
+<br>
+ <a name="nsocketgetport"><b>getport</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> i - portnummer
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> Gibt die Nummer des Ports zurueck, auf dem
+<br>
+<dd> die Engine arbeitet.
+<br>
+ <a name="nsocketallowsend"><b>allowsend</b><br>
+<dd> INPUT
+<br>
+<dd> b
+<br>
+<dd> OUTPUT
+<br>
+<dd> v
+<br>
+<dd> INFO
+<br>
+<dd> Verbietet den Sendthread, wenn es "false" gesetzt wird.
+<br>
+<dd> Dient nur dem Debuggen und macht Netzsessions damit
+<br>
+<dd> unmoeglich. Default ist dies immer "true".
+<br>
+ <a name="nsocketallowreceive"><b>allowreceive</b><br>
+<dd> INPUT
+<br>
+<dd> b
+<br>
+<dd> OUTPUT
+<br>
+<dd> v
+<br>
+<dd> INFO
+<br>
+<dd> Siehe allowsend. Dies schaltet den Empfangsthread.
+<br>
+ <a name="nsocketallowalarm"><b>allowalarm</b><br>
+<dd> INPUT
+<br>
+<dd> b
+<br>
+<dd> OUTPUT
+<br>
+<dd> v
+<br>
+<dd> INFO
+<br>
+<dd> Siehe zuerst allowsend. Dies ist die variante fuer den
+<br>
+<dd> Alarmthread.
+<br>
+
+<hr> code/src/node/n3dn_cmds.cc<br>
+ <a name="n3dnode">
+<h1>n3dnode</h1>
+ <a name="n3dnode"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Die n3dnode ist die Grundlage zum Aufbau von Objekt-Hierarchien in
+<br>
+<dd>  der 3D-Welt. Die Child-Objekte in der Objekt-Hierarchie sind
+<br>
+<dd>  gleichzeitig auch Children in der 3D-Hierarchie. n3dnode Objekte
+<br>
+<dd>  besitzen eine Position, Ausrichtung, und Skalierung.
+<br>
+<dd>  Der Active-State der nxnode Klasse schaltet das Objekt sichtbar/unsichtbar.
+<br>
+<dd>  Die n3dnode ist auch die Grundlage zur Visualisierung. Sie
+<br>
+<dd>  definiert eine "aktuelle Position", welche untergeordnete
+<br>
+<dd>  Objekte mit VBuffer, Material, Textur und/oder Lichtquellen-
+<br>
+<dd>  Information ausfuellen koennen (siehe ntexnode, nmatnode,
+<br>
+<dd>  nvbufnode, nlightnode).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodetxyz"><b>txyz</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (TranslateX), f (TranslateY), f (TranslateZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Translatiert Objekt entlang [x,y,z].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodetx"><b>tx</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (TranslateX)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Translatiert Objekt entlang [x].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodety"><b>ty</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (TranslateY)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Translatiert Objekt entlang [y].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodetz"><b>tz</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (TranslateZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Translatiert Objekt entlang [z].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnoderxyz"><b>rxyz</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (RotateX), f (RotateY), f (RotateZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Rotiert Objekt um [xyz].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnoderx"><b>rx</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (RotateX)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Rotiert Objekt um [x].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodery"><b>ry</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (RotateY)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Rotiert Objekt um [y].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnoderz"><b>rz</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (RotateZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Rotiert Objekt um [z].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodesxyz"><b>sxyz</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (ScaleX), f (ScaleY), f (ScaleZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Skaliert in [xyz].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodesx"><b>sx</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (ScaleX)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Skaliert in [x].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodesy"><b>sy</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (ScaleY)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Skaliert in [y].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodesz"><b>sz</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (ScaleZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Skaliert in [z].
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodesetsprite"><b>setsprite</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (IsSprite)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet Sprite-Verhalten an (true) oder aus (false).
+<br>
+<dd>  Als Sprite blickt die 3DNode immer mit negativer
+<br>
+<dd>  Z-Achse genau in Richtung Viewer, die Y-Achse wird
+<br>
+<dd>  mit der Y-Achse des Viewer gleichgeschaltet (ist
+<br>
+<dd>  auf dem Bildschirm also immer senkrecht).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodegetsprite"><b>getsprite</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (IsSprite)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setsprite' eingestellten Zustand.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodesetbillboard"><b>setbillboard</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (IsBillboard)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet Billboard-Verhalten an (true) oder aus (false).
+<br>
+<dd>  Im Billboard-Modus richtet sich die 3D-Node zum
+<br>
+<dd>  Viewer aus, indem er sich um seine eigene Y-Achse
+<br>
+<dd>  dreht, diese selbst aber beibehaelt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodegetbillboard"><b>getbillboard</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (IsBillboard)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setbillboard' eingestellten Zustand.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodegett"><b>gett</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (TranslateX), f (TranslateY), f (TranslateZ)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die aktuelle Translation des Objekts zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodegetr"><b>getr</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (RotateX), f (RotateY), f (RotateZ)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die aktuelle Rotation des Objekts zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="n3dnodegets"><b>gets</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (ScaleX), f (ScaleY), f (ScaleZ)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die aktuelle Skalierung des Objekts zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nanim_cmds.cc<br>
+ <a name="nanimnode">
+<h1>nanimnode</h1>
+ <a name="nanimnode"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nanimnode Klasse verwaltet ein paar Attribute, die
+<br>
+<dd>  alle animierenden Node-Klassen gemeinsam haben, diese
+<br>
+<dd>  sind dann folgerichtig von der nAnimNode abgeleitet.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nanimnodesetreptype"><b>setreptype</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (RepType = [oneshot loop]
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt den Loop-Modus fuer das Objekt, zur Zeit
+<br>
+<dd>  sind 'oneshot' und 'loop' definiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nanimnodegetreptype"><b>getreptype</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (RepType = [oneshot loop]
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den aktuellen RepType des Objekts ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nanimnodesetchannel"><b>setchannel</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (ChannelName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Linkt das Objekt an einen globalen Anim-Channel,
+<br>
+<dd>  wie im Objekte '/sys/servers/sgraph' definiert.
+<br>
+<dd>  Der Defaultchannel ist 'time'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nanimnodegetchannel"><b>getchannel</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (ChannelName)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den Channel, an dem das Objekt haengt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nanimnodesetscale"><b>setscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Scale)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen Skalier-Wert, mit dem die Zeitangaben
+<br>
+<dd>  in den Keyframes multipliziert werden, bevor sie mit
+<br>
+<dd>  Zeit verglichen werden.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nanimnodegetscale"><b>getscale</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Scale)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den mit 'setscale' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nchnmod_cmds.cc<br>
+ <a name="nchnmodulator">
+<h1>nchnmodulator</h1>
+ <a name="nchnmodulator"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Moduliert ein Set an Channels mit Hilfe von Source-Channels.
+<br>
+<dd>  Technisch wird einfach jeweils der erste Channel mit dem
+<br>
+<dd>  zweiten Channel multipliziert und das Ergebnis in den ersten
+<br>
+<dd>  Channel zurueckgeschrieben.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnmodulatorbegin"><b>begin</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (NumDefs)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet ein Set an Channel-Modulator-Definition ein.
+<br>
+<dd>  Uebergeben wird die Anzahl der Definitionen (d.h.
+<br>
+<dd>  die Zahl der folgenden 'set' Anweisungen).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnmodulatorset"><b>set</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index), s (SrcChannelName), s (ModChannelName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Beschreibt eine Channel-Modulator-Operation. Das
+<br>
+<dd>  erste String-Argument beschreibt den zu modulierenden
+<br>
+<dd>  Channel, das zweite Argument den Channel, der den
+<br>
+<dd>  Modulations-Faktor liefert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnmodulatorend"><b>end</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Beendet eine 'begin'-'set'-Definition.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnmodulatorgetnum"><b>getnum</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (NumIndices)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert Anzahl Modulations-Definitionen im Objekt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnmodulatorget"><b>get</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (SrcChannelName), s (ModChannelName)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die Einstellungen fuer Definition mit
+<br>
+<dd>  Nummer 'Index'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nchnsplitter_cmds.cc<br>
+ <a name="nchnsplitter">
+<h1>nchnsplitter</h1>
+ <a name="nchnsplitter"> <dd><b>Superklasse: nanimnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Generiert neue Channels, indem mehrere "Maximum-Keyframes" auf einem
+<br>
+<dd>  Source-Channel verteilt werden. Jeder Keyframe entspricht einem
+<br>
+<dd>  Channel, der an der Position des Keyframes sein Maximum von 1.0
+<br>
+<dd>  erreicht, und an den angrenzenden Keyframes sein Minimum von 0.0.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnsplitteraddkey"><b>addkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (TimeStamp), s (ChannelName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Haengt einen neuen Keyframe an, definiert werden
+<br>
+<dd>  Position auf dem Source-Channel, und der
+<br>
+<dd>  Name des Channels, der generiert werden soll.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnsplitterbeginkeys"><b>beginkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (NumKeys)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet eine Random-Access-Keydefinition ein. Angegeben
+<br>
+<dd>  werden muss die Anzahl der Keys, die man mit
+<br>
+<dd>  'setkey' definieren moechte. Muss mit einem
+<br>
+<dd>  'endkeys' abgeschlossen werden.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnsplittersetkey"><b>setkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex), f (TimeStamp), s (ChannelName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen Key im Random-Access-Modus (zwischen
+<br>
+<dd>  einem 'beginkeys' / 'endkeys'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnsplitterendkeys"><b>endkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schliesst eine mit 'beginkeys' angefangene Key-Definition
+<br>
+<dd>  ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnsplittergetkeyinfo"><b>getkeyinfo</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (NumKeys)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert Anzahl Keyframes.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nchnsplittergetkey"><b>getkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (TimeStamp), s (ChannelName)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert Timestamp und Channelname fuer den gegeben
+<br>
+<dd>  Keyframe-Index. Falls der Index zu gross ist,
+<br>
+<dd>  gibt's eine Assertion.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/ncluster_cmds.cc<br>
+ <a name="ncluster">
+<h1>ncluster</h1>
+ <a name="ncluster"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Ein nCluster-Objekt wird anstelle eines nVBufNode-Objekts in die
+<br>
+<dd>  Hierarchie eingeklinkt und definiert die Verbindung zwischen
+<br>
+<dd>  einem Skelett (repraesentiert durch eine nJoint-Hierarchie)
+<br>
+<dd>  und einer Skin (repraesentiert durch ein nVBufNode Objekt).
+<br>
+<dd>  Fuer jeden Vertex der Skin wird ein nJoint definiert, an den
+<br>
+<dd>  der Vertex angeklebt ist, und eine Wichtung, die definiert,
+<br>
+<dd>  wie stark der Vertex die Bewegung des nJoints mitmacht.
+<br>
+<dd>  Unter dem nCluster-Objekt muss genau ein nVBufNode-Objekt
+<br>
+<dd>  existieren, welches die Skin definiert, und genau ein
+<br>
+<dd>  nJoint-Objekt, welches die Joint-Root darstellt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nclusterbeginmap"><b>beginmap</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (NumMappings)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet die Vertex-Mappings ein. Weil beim Vertex-
+<br>
+<dd>  Mappen die VBuffer-Daten benoetigt werden, muessen
+<br>
+<dd>  zu diesem Zeitpunkt bereits das Skin-nVBufNode-Objekt
+<br>
+<dd>  und die Joint-Hierarchie unter dem nCluster-Objekt
+<br>
+<dd>  existieren, ausserdem muss ein Gfx-Server existieren,
+<br>
+<dd>  der das VBuffer-Objekt bereitstellt. Uebergeben werden
+<br>
+<dd>  muss die Anzahl der nachfolgenden Mapping-Definitionen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nclustermap"><b>map</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index), f (Weight), s (JointName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Klebt einen Vertex gewichtet an einen Joint.
+<br>
+<dd>  Der Vertex wird ueber seinen Index im Skin-VBuffer-
+<br>
+<dd>  Objekt definiert.
+<br>
+<dd>  Die Wichtung definiert, wie sehr der Vertex die
+<br>
+<dd>  Bewegung des Joints mitmacht (genauer: wenn p0 die
+<br>
+<dd>  Position des Vertex bei entspanntem Joint ist, und
+<br>
+<dd>  p1 die Position bei der aktuelle Ausrichtung des Joints,
+<br>
+<dd>  dann ist die resultierende Vertex-Position p
+<br>
+<dd>  p = p0 + ((p1 - p0)*w).
+<br>
+<dd>  Der JointName definiert den Pfad des Joint-Objekts
+<br>
+<dd>  relativ zum nCluster-Objekt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nclusterendmap"><b>endmap</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schliesst die Vertex-Mapping-Definition ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nflip_cmds.cc<br>
+ <a name="nflipflop">
+<h1>nflipflop</h1>
+ <a name="nflipflop"> <dd><b>Superklasse: nanimnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nflipflop-Klasse schaltet genau eins ihrer Child-Objekte
+<br>
+<dd>  zeitabhaengig aktiv. Wie bei einer Weiche laesst sich damit
+<br>
+<dd>  der Triggerstrom durch Teile der Hierarchie lenken (Der Trigger-
+<br>
+<dd>  Befehl wird nur von aktiven Objekten rekursiv an die Child-Objekts
+<br>
+<dd>  weitergegeben. Inaktive Objekte blockieren den Triggerstrom).
+<br>
+<dd>  Wie ein nipol Objekt lebt ein nflipflop Objekt auf einer Timeline,
+<br>
+<dd>  und kann diese im Oneshot- oder Loop-Mode durchlaufen. Die Information,
+<br>
+<dd>  wann welches Child aktiv geschaltet wird, definiert man ebenfalls wie
+<br>
+<dd>  beim nipol Objekt durch das Anhaengen von Keyframes.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nflipflopaddkey"><b>addkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Time) s (Objectname)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Haengt einen neuen Keyframe an das nflipflop Objekt.
+<br>
+<dd>  Angegeben wird ein Zeitpunkt auf der Timeline in
+<br>
+<dd>  Sekunden und der Name eines Subobjekts, welches
+<br>
+<dd>  zu diesem Zeitpunkt aktiv geschaltet werden soll.
+<br>
+<dd>  Ein Subobjekt dieses Namens muss bereits existieren,
+<br>
+<dd>  sonst kommt das Kommando mit false zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nipol_cmds.cc<br>
+ <a name="nipol">
+<h1>nipol</h1>
+ <a name="nipol"> <dd><b>Superklasse: nanimnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Ein nipol (kurz fuer Interpolator) Objekt kann Attribute des
+<br>
+<dd>  Parent-Objekts animieren. Grundsaetzlich funktionierts so:
+<br>
+<dd>  (1) Man erzeugt ein (oder mehrere) nipol Objekt als Kind des Objekts,
+<br>
+<dd>  das man animieren will, die Klasse dieses Objekts muss von der
+<br>
+<dd>  nVisNode Klasse abgeleitet sein.
+<br>
+<dd>  (2) Man "connected" das ipol-Objekt mit einem "Channel" seines
+<br>
+<dd>  Parent-Objekts. Fuer die nipol Klasse ist ein Channel ein
+<br>
+<dd>  Script-Kommando, welches 1..4 Float-Argumente akzeptiert
+<br>
+<dd>  (also zum Beispiel n3dnode::t[xyz], n3dnode::r[xyz], n3dnode::s[xyz],
+<br>
+<dd>  aber auch n3dlight::setcolor, etc...).
+<br>
+<dd>  (3) Man entscheidet sich, auf welcher Zeitlinie das Objekt leben
+<br>
+<dd>  soll. Bisher gibt es die globale Zeitlinie und die lokale
+<br>
+<dd>  Zeitlinie, die jeweils dann beginnt, wenn das Objekt aktiv
+<br>
+<dd>  geschaltet wird (zum Beispiel wenn ein visueller Zustandangeschaltet wird).
+<br>
+<dd>  (4) Man faengt an, 1,2,3 oder 4-dimensionale Keyframes an das nipol
+<br>
+<dd>  Objekt zu haengen (je nachdem, was der Channel benoetigt). Zwischen
+<br>
+<dd>  den Keyframes wird derzeit generell linear interpoliert.
+<br>
+<dd>  Der Rest passiert von allein. Sobald das Parent-Objekt getriggert
+<br>
+<dd>  wird (zum Beispiel zur Darstellung), triggert es auch rekursiv alle
+<br>
+<dd>  seine Child-Objekte, unter anderem also die nipol Objekte. Diese
+<br>
+<dd>  ermitteln die aktuellen Interpolations-Werte, und generieren
+<br>
+<dd>  dann einen Dispatch()-Call an das Parent-Objekt.
+<br>
+<dd>  Man beachte ausserdem, dass das Objekt in der Zeit VOR dem
+<br>
+<dd>  1.Keyframe und NACH dem letzten Keyframe das Parent-Objekt
+<br>
+<dd>  ueberhaupt nicht anfasst. Damit lassen sich mehrere
+<br>
+<dd>  Interpolatoren staffeln, die auf denselben Channel wirken,
+<br>
+<dd>  aber hintereinander in der Zeitlinie.
+<br>
+<dd>  Im Loop-Modus schaltet der Timer vom letzten Keyframe
+<br>
+<dd>  auf den Anfang der lokalen Zeitlinie (t = 0) zurueck, allerdings
+<br>
+<dd>  muss der 1.Keyframe durchaus nicht auf (t = 0) beginnen, sondern
+<br>
+<dd>  kann auch spaeter beginnen. Bis der erste Keyframe erreicht ist,
+<br>
+<dd>  ist der Interpolator vollkommen inaktiv.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolconnect"><b>connect</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Channelname)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Verbindet das nipol-Objekt mit einem Interpolations-
+<br>
+<dd>  Channel des Parent-Objekts. Ein Interpolations-Channel
+<br>
+<dd>  ist ein Script-Kommando, welches 1..4 Float-Zahlen
+<br>
+<dd>  als Parameter erwartet. Mit jedem Triggern des
+<br>
+<dd>  nipol-Objekts berechnet dieses die aktuellen Interpolations-
+<br>
+<dd>  Werte und wendet dann das angegebene Script-Kommando
+<br>
+<dd>  auf das Parent-Objekt an.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipoladdkey1f"><b>addkey1f</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Time), f (Value0)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  *** OBSOLETE *** OBSOLETE *** OBSOLETE ***
+<br>
+<dd>  Haengt einen 1-dimensionalen Keyframe an das Objekt.
+<br>
+<dd>  Time ist ein Zeitpunkt auf der Timeline in Sekunden.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipoladdkey2f"><b>addkey2f</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Time), f (Value0), f (Value1)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  *** OBSOLETE *** OBSOLETE *** OBSOLETE ***
+<br>
+<dd>  Haengt einen 2-dimensionalen Keyframe an das Objekt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipoladdkey3f"><b>addkey3f</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Time), f (Value0), f (Value1), f (Value2)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  *** OBSOLETE *** OBSOLETE *** OBSOLETE ***
+<br>
+<dd>  Haengt einen 3-dimensionalen Keyframe an das Objekt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipoladdkey4f"><b>addkey4f</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Time), f (Value0), f (Value1), f (Value2), f (Value3)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  *** OBSOLETE *** OBSOLETE *** OBSOLETE ***
+<br>
+<dd>  Haengt einen 4-dimensionalen Keyframe an das Objekt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetval1f"><b>getval1f</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Value0)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den aktuellen Status des Interpolators als 1D-Wert ab.
+<br>
+<dd>  Wenn der Interpolator nicht connected ist, kann man
+<br>
+<dd>  hiermit seinen aktuellen Zustand ermitteln. Das klappt
+<br>
+<dd>  aber nur, wenn das Parent-Objekt den Interpolator
+<br>
+<dd>  trotzdem anregt, weil sich der Interpolator normalerweise
+<br>
+<dd>  erst bei einem 'connect' als DependNode bei seinem
+<br>
+<dd>  Parent-Objekt anmeldet. Wenn das nicht passiert, ist
+<br>
+<dd>  der Interpolator passiv und manipuliert sein Parent-
+<br>
+<dd>  Objekt NICHT. In dem Fall muss das Parent-Objekt selbst
+<br>
+<dd>  aktiv nachfragen (z.B. mit den 'getval*f' Kommandos).
+<br>
+<dd>  Klappt z.B. mit der nmixer Klasse.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetval2f"><b>getval2f</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Value0), f (Value1)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den aktuellen Status des Interpolators als
+<br>
+<dd>  2D-Wert ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetval3f"><b>getval3f</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Value0), f (Value1), f (Value2)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den aktuellen Status des Interpolators als
+<br>
+<dd>  3D-Wert ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetval4f"><b>getval4f</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Value0), f (Value1), f (Value2), f (Value3)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den aktuellen Status des Interpolators als
+<br>
+<dd>  4D-Wert ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolbeginkeys"><b>beginkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (NumKeys), i (KeySize)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet eine Keyframe-Definition ein. 'NumKeys' ist die
+<br>
+<dd>  Anzahl der Keyframes, die man definieren will,
+<br>
+<dd>  'KeySize' deren Dimension (1,2,3 oder 4).
+<br>
+<dd>  'beginkeys' allokiert das interne Keyarray neu, alle
+<br>
+<dd>  vorher definierten Keys gehen also verloren.
+<br>
+<dd>  Nach dem 'beginkeys' sollten genau 'NumKeys'
+<br>
+<dd>  'setkeyXf' folgen, wobei 'X' die 'KeySize' ist,
+<br>
+<dd>  danach muss ein abschliessendes 'endkeys' folgen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolsetkey1f"><b>setkey1f</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  f (Time)
+<br>
+<dd>  f (Value0)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen 1-dimensionalen Keyframe.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolsetkey2f"><b>setkey2f</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  f (Time)
+<br>
+<dd>  f (Value0)
+<br>
+<dd>  f (Value1)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen 2-dimensionalen Keyframe.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolsetkey3f"><b>setkey3f</b><br>
+<dd>  INPUT
+<br>
+<dd>  i(KeyIndex)
+<br>
+<dd>  f(Time)
+<br>
+<dd>  f(Value0)
+<br>
+<dd>  f(Value1)
+<br>
+<dd>  f(Value2)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen 3-dimensionalen Keyframe.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolsetkey4f"><b>setkey4f</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  f (Time)
+<br>
+<dd>  f (Value0)
+<br>
+<dd>  f (Value1)
+<br>
+<dd>  f (Value2)
+<br>
+<dd>  f (Value3)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen 3-dimensionalen Keyframe.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolendkeys"><b>endkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schliesst eine mit 'beginkeys' gestartete Key-Definition
+<br>
+<dd>  ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetkeyinfo"><b>getkeyinfo</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (NumKeys), i (KeySize)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die Anzahl Keys 'NumKeys' und deren
+<br>
+<dd>  Dimension 'KeySize' im KeyArray.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetkey1f"><b>getkey1f</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Time), f (Value0)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert 1-dimensionalen Inhalt des Keyframe mit
+<br>
+<dd>  Index 'KeyIndex'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetkey2f"><b>getkey2f</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Time), f (Value0), f (Value1)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert 2-dimensionalen Inhalt des Keyframe mit
+<br>
+<dd>  Index 'KeyIndex'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetkey3f"><b>getkey3f</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Time), f (Value0), f (Value1), f (Value2)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert 3-dimensionalen Inhalt des Keyframe mit
+<br>
+<dd>  Index 'KeyIndex'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nipolgetkey4f"><b>getkey4f</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Time), f (Value0), f (Value1), f (Value2), f (Value3)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert 4-dimensionalen Inhalt des Keyframe mit
+<br>
+<dd>  Index 'KeyIndex'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/njanim_cmds.cc<br>
+ <a name="njointanim">
+<h1>njointanim</h1>
+ <a name="njointanim"> <dd><b>Superklasse: nanimnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Weil sich das Baukasten-System aus Mixern und Interpolatoren
+<br>
+<dd>  fuer fette Blend-Animationen als zu langsam erwiesen hat, hier
+<br>
+<dd>  eine durchoptimierte Klasse, die die gesamte Animation fuer ein
+<br>
+<dd>  Joint-Skelett in ein Objekt vereinigt und dadurch eine ganze
+<br>
+<dd>  Menge interne Optimierungen machen kann.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimbeginjoints"><b>beginjoints</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (NumJoints)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet die Joint-Definition ein. Uebergeben wird die
+<br>
+<dd>  Anzahl Joints im Skelett. Nachfolgend muss fuer jeden
+<br>
+<dd>  Joint ein 'setjoint' folgen, abgeschlossen von einem
+<br>
+<dd>  'endjoints'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimsetjoint"><b>setjoint</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index), s (ShortName), s (Path), b (HasTrans), b (HasRot)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt Informationen zu einem Joint. Neben dem Index
+<br>
+<dd>  wird angegeben:
+<br>
+<dd>  - ein Kurzname, ueber den der Joint fortan identifiziert wird
+<br>
+<dd>  - der Pfad zum Joint, beginnend mit dem Root-Joint
+<br>
+<dd>  - zwei Bools, die angeben, ob der Joint translatiert
+<br>
+<dd>    und/oder rotiert wird.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimendjoints"><b>endjoints</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schliesst die Definition der Joints ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimbeginstates"><b>beginstates</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (NumStates)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet die Definition der AnimStates ein. AnimStates
+<br>
+<dd>  werden anhand von Wichtungen zu einer resultierenden
+<br>
+<dd>  Animation vermixt. Der Name eines AnimStates ist
+<br>
+<dd>  identisch zum Namen eines Channels, der die aktuelle
+<br>
+<dd>  Wichtung des States beschreibt.
+<br>
+<dd>  Die Definition der States muss NACH der
+<br>
+<dd>  Joint-Definition passieren.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimsetstate"><b>setstate</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index), s (Name), i (NumKeys)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Beschreibt einen AnimState. Neben dem Index wird
+<br>
+<dd>  der Name des States (identisch mit Weight-Channel-Name)
+<br>
+<dd>  und die Anzahl der Keyframes angegeben.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimendstates"><b>endstates</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schliesst die State-Definition ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimgetnumjoints"><b>getnumjoints</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (NumJoints)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die Anzahl der Joint-Definition, wie mit
+<br>
+<dd>  'beginjoints' definiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimgetnumstates"><b>getnumstates</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (NumStates)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die Anzahl der State-Definition, wie mit
+<br>
+<dd>  'beginstates' definiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimgetjoint"><b>getjoint</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (ShortName), s (Path), b (HasTrans), b (HasRot)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die Definition von Joint Nummer 'Index'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimgetstate"><b>getstate</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Name), i (NumKeys)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die Definition von State Nummer 'Index'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimbeginkeys"><b>beginkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (KeyframeTime)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet die Keyframe-Definition ein. Uebergeben wird
+<br>
+<dd>  die Laenge eines Frames in Sekunden.
+<br>
+<dd>  Innerhalb eines 'beginkeys'/'endkeys' sind nur
+<br>
+<dd>  'beginrotate' und 'begintranslate' Bloecke erlaubt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimbeginrotate"><b>beginrotate</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (JointName), s (StateName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet die Rotations-Definition fuer den
+<br>
+<dd>  angegebenen Joint und State ein. Nachfolgend muessen
+<br>
+<dd>  soviele 'setkeys' folgen, wie dieser State Keyframes
+<br>
+<dd>  besitzt. Ausserdem muss der Joint bei seinem
+<br>
+<dd>  'setjoint' mit dem HasRot-Flag erzeugt worden sein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimbegintranslate"><b>begintranslate</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (JointName), s (StateName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Leitet die Translations-Definition fuer den
+<br>
+<dd>  angegebenen Joint und State ein. Nachfolgend muessen
+<br>
+<dd>  soviele 'setkeys' folgen, wie dieser State Keyframes
+<br>
+<dd>  besitzt. Ausserdem muss der Joint bei seinem
+<br>
+<dd>  'setjoint' mit dem HasTrans-Flag erzeugt worden sein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimsetkey"><b>setkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index), f (X), f (Y), f (Z)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt einen Rotations- oder Translations-Keyframe, je
+<br>
+<dd>  nachdem ob innerhalb 'beginrotate' oder 'begintranslate'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimendrotate"><b>endrotate</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Beendet eine Rotations-Keyframe-Definition.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimendtranslate"><b>endtranslate</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Beendet eine Translations-Keyframe-Definition.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimendkeys"><b>endkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Beendet die komplette Keyframe-Definition.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimgetrotkey"><b>getrotkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index), s (JointName), s (StateName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (X), f (Y), f (Z)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die Rotations-Keyframe-Definition fuer
+<br>
+<dd>  Keyframe Nummer 'Index' fuer den angegebenen Joint und
+<br>
+<dd>  State.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointanimgettranskey"><b>gettranskey</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Index), s (JointName), s (StateName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (X), f (Y), f (Z)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die Translations-Keyframe-Definition fuer
+<br>
+<dd>  Keyframe Nummer 'Index' fuer den angegebenen Joint und
+<br>
+<dd>  State.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/njoint_cmds.cc<br>
+ <a name="njoint">
+<h1>njoint</h1>
+ <a name="njoint"> <dd><b>Superklasse: n3dnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Ein nJoint Objekt definiert ein Gelenk in einem hierarchischem
+<br>
+<dd>  Knochenskelett. Weil die nJoint-Klasse von der n3DNode
+<br>
+<dd>  abgeleitet ist, kann man die ueblichen Transformationen
+<br>
+<dd>  (Translate, Rotate, Scale) darauf anwenden, allerdings werden
+<br>
+<dd>  diese relativ zu einer Anfangs-Orientierung des nJoint-Objekts
+<br>
+<dd>  interpretiert. Diese Orienierung definiert die normalisierte
+<br>
+<dd>  Orientierung des Joints im Skelett. das Koordinatensystem
+<br>
+<dd>  der Joint-Node wird durch die Orientierung so ausgerichtet,
+<br>
+<dd>  dass die X-Achse in Richtung des Knochens zeigt. Die
+<br>
+<dd>  Orientierung ist relativ zum Parent-Joint definiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointoxyz"><b>oxyz</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (OrientX), f (OrientY), f (OrientZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die Orientierung des nJoint-Objekts relativ
+<br>
+<dd>  zum Parent-Joint. Die Orientierung richtet das
+<br>
+<dd>  Koordinaten-System des Joints so aus, dass der "Knochen"
+<br>
+<dd>  zum naechsten Joint entlang der X-Achse zeigt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointgeto"><b>geto</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (OrientX), f (OrientY), f (OrientZ)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die per 'oxyz' definierte Joint-Orientierung.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointnxyz"><b>nxyz</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (NormalX), f (NormalY), f (NormalZ)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die Ausgangs-Translation, vergleichbar
+<br>
+<dd>  mit der Orientation. Alle per txyz definierten
+<br>
+<dd>  Translation werden relativ zu dieser interpretiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="njointgetn"><b>getn</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (NormalX), f (NormalY), f (NormalZ)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert die per 'nxyz' definierten Werte.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nlight_cmds.cc<br>
+ <a name="nlightnode">
+<h1>nlightnode</h1>
+ <a name="nlightnode"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Definiert "aktuelle Lichtquellen-Attribute" fuer uebergeordnete
+<br>
+<dd>  n3dnode. Falls der Lichtquellen-Typ Position und/oder Ausrichtung
+<br>
+<dd>  benoetigt, wird diese von der n3dnode bereitgestellt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlightnodesettype"><b>settype</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Type = [ambient point spot directional parallelpoint])
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stellt den Typ der Lichtquelle ein:
+<br>
+<dd>  ambient -- Ambient-Lichtquelle, davon sollte nur 1 pro Szene
+<br>
+<dd>             existieren, da sich die Ambient-Lichtquellen nicht
+<br>
+<dd>             kombinieren, sondern gegenseitig ueberschreiben.
+<br>
+<dd>             Auf eine Ambient-Lichtquelle kann nur "setcolor"
+<br>
+<dd>             sinnvoll angewendet werden.
+<br>
+<dd>  point   -- Punkt-Lichtquelle, wertet die aktuelle Position aus.
+<br>
+<dd>             "setcolor" Farbe und Intensitaet, "setattenuation"
+<br>
+<dd>             den entfernungsabhaengigen Lichtabfall.
+<br>
+<dd>  spot    -- Spot-Lichtquelle, wertet aktuelle Position und
+<br>
+<dd>             Ausrichtung aus (der Lichtstrahl geht in Richtung
+<br>
+<dd>             negativ-Z der uebergeordneten n3dnode).
+<br>
+<dd>             setcolor, setattenuation und
+<br>
+<dd>             setspot funktionieren wie erwartet.
+<br>
+<dd>  directional -- Richtungs-Lichtquelle, die Ausrichtung der
+<br>
+<dd>             uebergeordneten n3dnode definiert die Richtung
+<br>
+<dd>             (entlang negativ-Z). setcolor
+<br>
+<dd>             Farbe und Intensitaet. Position der n3dnode,
+<br>
+<dd>             setattenuation, setspot haben keine Auswirkung.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlightnodesetcolor"><b>setcolor</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert Farbe und Intensitaet der Lichtquelle. Normaler Wertebereich
+<br>
+<dd>  liegt zwischen -1.0 und +1.0, es sind aber prinzipiell auch groessere
+<br>
+<dd>  Werte erlaubt. Es ist nicht moeglich, die Ambient/Diffuse/Specular
+<br>
+<dd>  Komponenten der Lichtquelle getrennt zu setzen. OpenGL erlaubt das
+<br>
+<dd>  zwar, aber nicht Direct3D. Stattdessen werden alle Nicht-Ambient-
+<br>
+<dd>  Lichtquellen auf Ambient 0,0,0,0 und Diffuse/Specular auf die
+<br>
+<dd>  per setcolor definierte Farbe gesetzt. Man beachte, dass man
+<br>
+<dd>  bei die Materialeigenschaften die einzelnen Komponenten
+<br>
+<dd>  (Ambient/Specular/Diffuse) in den Reflexionseigenschaften
+<br>
+<dd>  durchaus getrennt einstellen kann.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlightnodesetattenuation"><b>setattenuation</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Constant), f (Linear), f (Quadratic)
+<br>
+<dd>  INFO
+<br>
+<dd>  Stellt die 3 entfernungsabhaengigen Lichtstaerke-Abfalls-Parameter
+<br>
+<dd>  ein. Irgendwo in den OpenGL Specs findet sich sicher eine Formel...bis dahin:
+<br>
+<dd>  1, 0, 0     -> Lichtstaerke bleibt unendlich weit konstant
+<br>
+<dd>  0, 0.2, 0   -> gut zum Testen, kleiner Werte fuer Linear
+<br>
+<dd>                 ergeben schwaechere Abnahme
+<br>
+<dd>  Wird nur ausgewertet bei Typ "point" und "spot"
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlightnodesetspot"><b>setspot</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Cutoff), f (Exponent)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stellt die Spot-Parameter Oeffnungs-Winkel (cutoff) und winkelabhaengige
+<br>
+<dd>  Lichtstaerke-Abnahme (exponent) ein. Cutoff macht nur kleiner 90 Grad
+<br>
+<dd>  Sinn. Der Exponent liegt zwischen 0 und 128, je groesser, desto staerker
+<br>
+<dd>  ist der Strahl fokussiert. Bei Exponent 0 ist die Lichtstaerke ueber
+<br>
+<dd>  den gesamten Oeffnungswinkel gleichmaessig verteilt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlightnodegettype"><b>gettype</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Type = [ambient point spot directional parallelpoint])
+<br>
+<dd>  INFO
+<br>
+<dd>  Liefert den Typ der Lichtquelle zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlightnodegetcolor"><b>getcolor</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  INFO
+<br>
+<dd>  Liefert die Farbe der Lichtquelle zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlightnodegetattenuation"><b>getattenuation</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Constant), f (Linear), f (Quadratic)
+<br>
+<dd>  INFO
+<br>
+<dd>  Liefert Lichtstaerke-Abfall-Parameter zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlightnodegetspot"><b>getspot</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Cutoff), f (Exponent)
+<br>
+<dd>  INFO
+<br>
+<dd>  Liefert Oeffnungswinkel-Parameter zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nlink_cmds.cc<br>
+ <a name="nlinknode">
+<h1>nlinknode</h1>
+ <a name="nlinknode"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen variablen "Link" auf ein anderes Visnode-
+<br>
+<dd>  Objekt, welcher zur Laufzeit umgebogen werden kann.
+<br>
+<dd>  Kann als "Placeholder"-Objekt in eine Visual-Hierarchie
+<br>
+<dd>  eingebunden werden, wenn das Target-Objekt erst zur Laufzeit
+<br>
+<dd>  feststeht, oder zur Laufzeit wechseln soll.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlinknodesettarget"><b>settarget</b><br>
+<dd>  INPUT
+<br>
+<dd>  o (TargetObject)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert das Target nvisnode Objekt, welches anstelle
+<br>
+<dd>  des nlinknode Objekts getriggert werden soll. Das Target-
+<br>
+<dd>  Objekt muss
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nlinknodegettarget"><b>gettarget</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  o (TargetObject)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert das per 'settarget' eingestellte Ziel-Objekt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nmatn_cmds.cc<br>
+ <a name="nmatnode">
+<h1>nmatnode</h1>
+ <a name="nmatnode"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nmatnode kapselt eine Material-Beschreibung (genauer
+<br>
+<dd>  gesagt eine Sammlung von Renderstates). Unter einer n3dnode
+<br>
+<dd>  angekoppelt stellt sie ein "aktuelles Material" bereit,
+<br>
+<dd>  zusammen mit einer nvbufnode und einer ntexnode erhaelt
+<br>
+<dd>  man damit ein visuelles Objekt, dessen Position durch die
+<br>
+<dd>  uebergeordnete n3dnode definiert ist.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodesetstate"><b>setstate</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Type), s (Param)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setze einen Renderstate im Material. Falls bereits ein
+<br>
+<dd>  Renderstate "Type" existiert, wird dessen Zustand auf "Param"
+<br>
+<dd>  gesetzt, wenn nicht, wird ein neuer interner Renderstate
+<br>
+<dd>  erzeugt.
+<br>
+<dd>  Folgende Werte sind erlaubt:
+<br>
+<dd>
+<br>
+<dd>  texture_address_u
+<br>
+<dd>  texture_address_v
+<br>
+<dd>      wrap    -> Textur-Koords ausserhalb 0.0->1.0 wrappen
+<br>
+<dd>      clamp   -> Textur-Koords ausserhalb 0.0->1.0 abschneiden
+<br>
+<dd>
+<br>
+<dd>  texture_blend   -- wie wird Textur mit "Grundierung" verrechnet?
+<br>
+<dd>      decal       -> cPix=(cSrc*(1.0-aTex))+(aTex*cTex), aPix=aSrc
+<br>
+<dd>      modulate    -> cPix=cSrc*cTex, aPix=aSrc*aTex
+<br>
+<dd>      replace     -> cPix=cTex, aPix=aTex
+<br>
+<dd>      blend       -> cPix=cSrc*(1.0-cTex)+(cTex), aPix=aSrc*aTex
+<br>
+<dd>
+<br>
+<dd>  texture_min_filter  -- Textur-Filter-Modus bei Verkleinerung
+<br>
+<dd>      nearest                 -> kein Filtering
+<br>
+<dd>      linear                  -> Linear-Interpolation zwischen benachbarten
+<br>
+<dd>                                 Texeln
+<br>
+<dd>      nearest_mipmap_nearest  -> selektiert ein ungefiltertes Texel aus
+<br>
+<dd>                                 aus der naechstliegenden Mipmap
+<br>
+<dd>      linear_mipmap_nearest   -> selektiert ein linear-gefiltertes Texel aus
+<br>
+<dd>                                 der naechstliegenden Mipmap
+<br>
+<dd>      nearest_mipmap_linear   -> selektiert 2 ungefilterte Texel aus den
+<br>
+<dd>                                 beiden naechstliegenden Mipmaps und linear
+<br>
+<dd>                                 interpoliert zwischen diesen beiden Werten
+<br>
+<dd>      linear_mipmap_linear    -> selektiert 2 gefilterte Texel aus den beiden
+<br>
+<dd>                                 naechstliegenden Mipmaps und interpoliert
+<br>
+<dd>                                 linear zwischen diesen beiden Werten
+<br>
+<dd>
+<br>
+<dd>  texture_mag_filter  -- Textur-Filter-Modus bei Vergroesserung
+<br>
+<dd>      nearest     -> kein Filtering
+<br>
+<dd>      linear      -> einfache Linear-Interpolation
+<br>
+<dd>
+<br>
+<dd>  alpha_enable
+<br>
+<dd>      true        -> Alphablending an
+<br>
+<dd>      false       -> Alphablending aus
+<br>
+<dd>
+<br>
+<dd>  alpha_src_blend     -- Source-Alphablend-Faktoren
+<br>
+<dd>  alpha_dest_blend    -- Destination-Alphablend-Faktoren
+<br>
+<dd>      zero            -> (0,0,0,0)
+<br>
+<dd>      one             -> (1,1,1,1)
+<br>
+<dd>      scrcolor        -> (Rs,Gs,Bs,As)
+<br>
+<dd>      invsrccolor     -> (1-Rs,1-Gs,1-Bs,1-As)
+<br>
+<dd>      srcalpha        -> (As,As,As,As)
+<br>
+<dd>      invsrcalpha     -> (1-As,1-As,1-As,1-As)
+<br>
+<dd>      destalpha       -> (Ad,Ad,Ad,Ad)
+<br>
+<dd>      invdestalpha    -> (1-Ad,1-Ad,1-Ad,1-Ad)
+<br>
+<dd>      destcolor       -> (Rd,Gd,Bd,Ad)
+<br>
+<dd>      invdestcolor    -> (1-Rd,1-Gd,1-Bd,1-Ad)
+<br>
+<dd>
+<br>
+<dd>  light_enable
+<br>
+<dd>      true        -> Beleuchtungs-Berechnung fuer dieses Objekt an
+<br>
+<dd>      false       -> Beleuchtungs-Berechnung fuer dieses Objekt aus
+<br>
+<dd>
+<br>
+<dd>  zwrite_enable
+<br>
+<dd>      true        -> ZBuffer wird beim Rendern updated
+<br>
+<dd>      false       -> ZBuffer wird nicht angefasst
+<br>
+<dd>
+<br>
+<dd>  zfunc           - Pixel accept/reject Regel fuer Z-Wert
+<br>
+<dd>      never           -> Pixel wird nie gerendert
+<br>
+<dd>      less            -> rendere, wenn (pixel_z < buffer_z)
+<br>
+<dd>      equal           -> wenn (pixel_z == buffer_z)
+<br>
+<dd>      lessequal       -> (default) wenn (pixel_z <= buffer_z)
+<br>
+<dd>      greater         -> wenn (pixel_z > buffer_z)
+<br>
+<dd>      notequal        -> wenn (pixel_z != buffer_z)
+<br>
+<dd>      greaterequal    -> wenn (pixel_z >= buffer_z)
+<br>
+<dd>      always          -> Pixel wird immer gerendert
+<br>
+<dd>
+<br>
+<dd>  texgen_mode     - Textur Koordinaten Generierungs Mode
+<br>
+<dd>      off             -> keine Generierung
+<br>
+<dd>      object_linear   -> g = p0*x + p1*y + p2*z + p3*w
+<br>
+<dd>      eye_linear      -> g = p0'*x + p1'*y + p2'*z + p3'*w
+<br>
+<dd>                         dabei ist px' = px * Modelview.Invert()
+<br>
+<dd>      sphere_map      -> Environment Mapping
+<br>
+<dd>      Die Parameter (p0,p1,p2,p3) werden per 'settexgenu/v' eingestellt.
+<br>
+<dd>
+<br>
+<dd>  Legende fuer texture_blend:
+<br>
+<dd>  ===========================
+<br>
+<dd>  cPix -> resultierendes (r,g,b) Pixel nach der Blend-Operation
+<br>
+<dd>  aPix -> resultierender Alpha-Wert nach der Operation
+<br>
+<dd>  cSrc -> aktuelle (r,g,b) Farbe des Polygons
+<br>
+<dd>  aSrc -> aktueller Alpha-Wert des Polygons
+<br>
+<dd>  cTex -> aktuelle (r,g,b) Textur-Farbe
+<br>
+<dd>  aTex -> aktueller Textur-Alphawert
+<br>
+<dd>
+<br>
+<dd>  cPix,aPix geht bei eingeschaltetem Alpha-Blending als
+<br>
+<dd>  (Rs,Gs,Bs,As) ins Alphablending rein, ansonsten direkt
+<br>
+<dd>  in den Framebuffer.
+<br>
+<dd>
+<br>
+<dd>  Legende fuer Alphablending:
+<br>
+<dd>  ===========================
+<br>
+<dd>  Die resultierende Farbe ergibt sich so:
+<br>
+<dd>  R = Rs*Rfs + Rd*Rfd
+<br>
+<dd>  G = Gs*Gfs + Gd*Gfd
+<br>
+<dd>  B = Bs*Bfs + Bd*Bfd
+<br>
+<dd>  A = As*Afs + Ad*Afd
+<br>
+<dd>
+<br>
+<dd>  (R,G,B,A)           -> resultierende Farbe nach dem Blending
+<br>
+<dd>  (Rfs,Gfs,Bfs,Afs)   -> Source-Blend-Factor definiert durch alpha_src_blend
+<br>
+<dd>  (Rfd,Gfd,Bfd,Afd)   -> Dest-Blend-Factor, definiert durch alpha_dest_blend
+<br>
+<dd>  (Rs,Gs,Bs,As)       -> Source-Farbe (Polygon/Textur-Farbe)
+<br>
+<dd>  (Rd,Gd,Bd,Ad)       -> Dest-Farbe (Pixel im Framebuffer, wobei die
+<br>
+<dd>                         meisten 3D-Karten keine Ad unterstuetzen, Ad wird
+<br>
+<dd>                         immer auf 1.0 gesetzt.
+<br>
+<dd>
+<br>
+<dd>  Uff...
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodesetambient"><b>setambient</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setze die Refelektions-Faktoren fuer Ambient-Licht.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodesetdiffuse"><b>setdiffuse</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setze die Refelektions-Faktoren fuer diffuses Licht.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodesetemission"><b>setemission</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die eigene Lichtemission des Materials an.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodesettexgenu"><b>settexgenu</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (P0), f (P1), f (P2), f (P3)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stellt die Textur-Generierungs-Parameter fuer die
+<br>
+<dd>  Texgen-Modi 'object_linear' und 'eye_linear' fuer
+<br>
+<dd>  die U-Koordinate ein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodesettexgenv"><b>settexgenv</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (P0), f (P1), f (P2), f (P3)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stellt die Textur-Generierungs-Parameter fuer die
+<br>
+<dd>  Texgen-Modi 'object_linear' und 'eye_linear' fuer
+<br>
+<dd>  die V-Koordinate ein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodegetstate"><b>getstate</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Type)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (Param)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den aktuellen Zustand des per "Type" definierten
+<br>
+<dd>  Renderstates zurueck, oder "<error>", wenn der
+<br>
+<dd>  Renderstate nicht im Material existiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodegetambient"><b>getambient</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt aktuelle Ambient-Reflektions-Faktoren zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodegetdiffuse"><b>getdiffuse</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt aktuelle Diffuse-Reflektions-Faktoren zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodegetemission"><b>getemission</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt aktuelle Emissions-Werte zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodegettexgenu"><b>gettexgenu</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (P0), f (P1), f (P2), f (P3)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die per 'settexgenu' eingestellten Werte zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodegettexgenv"><b>gettexgenv</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (P0), f (P1), f (P2), f (P3)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die per 'settexgenv' eingestellten Werte zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodesetrenderpri"><b>setrenderpri</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (RenderPri)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt die Renderprioritaet fuer das gesamte Objekt,
+<br>
+<dd>  an dem das Material haengt. Die normale Prioritaet
+<br>
+<dd>  fuer alle Objekte ist 0. Niedriegere Werte
+<br>
+<dd>  werden vor hoeheren Werten gerendert. Die Prioritaet
+<br>
+<dd>  erzwingt eine bestimmte Reihenfolge beim Rendern.
+<br>
+<dd>  Normalerweise ist diese Reihenfolge egal, weil der
+<br>
+<dd>  ZBuffer die korrekte Verdeckung sicherstellt.
+<br>
+<dd>  Ist gedacht fuer spezielle Background/Foreground-Objekte
+<br>
+<dd>  (z.B. der Himmel). Allerdings sollte man dann auch
+<br>
+<dd>  im Material sicherstellen, dass der ZBuffer nicht
+<br>
+<dd>  in die Quere kommt ('setstate zwrite_enable false').
+<br>
+<dd>  Man sollte nur wenn unbedingt notwendig eine andere
+<br>
+<dd>  Pri als 0 verwenden, weil die gesamte Renderpipeline
+<br>
+<dd>  auf diesen "Normalfall" optimiert ist.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmatnodegetrenderpri"><b>getrenderpri</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (RenderPri)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die per 'setrenderpri' einstellbare Render-Prioritaet
+<br>
+<dd>  zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nmix_cmds.cc<br>
+ <a name="nmixer">
+<h1>nmixer</h1>
+ <a name="nmixer"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Ein nmixer fragt eine oder mehrere seiner Child-Nodes nach
+<br>
+<dd>  einem Set an Float-Zahlen, die dann entsprechend der Wichtung
+<br>
+<dd>  der einzelnen Child-Nodes vermixt werden. Mit dem Ergebnis
+<br>
+<dd>  wird das Parent-Objekt des nmixer-Objekts manipuliert.
+<br>
+<dd>  Die Verbindung zum Parent-Objekt heisst "uplink", die zu
+<br>
+<dd>  den Child-Objekten "downlink". Uplink und Downlink zusammen
+<br>
+<dd>  bilden eine "connection". Um ein nmixer-Objekt zu initialisieren
+<br>
+<dd>  haengt man zuerst die Childnodes an, setzt deren Wichtung
+<br>
+<dd>  und definiert dann eine Anzahl an Connections. Uplink und
+<br>
+<dd>  Downlink werden durch je ein Scriptkommando beschrieben, welches
+<br>
+<dd>  vom nmixer zum Abfragen der zu wichtenden Werte, bzw. zum Setzen
+<br>
+<dd>  des Ergebnisses benutzt werden sollen.
+<br>
+<dd>  Folgende Regeln muessen beachtet werden:
+<br>
+<dd>  - Parent-Objekt und alle Childnodes muessen von der nVisNode
+<br>
+<dd>    Klasse abgeleitet sein (muessen aber nicht unbedingt derselben
+<br>
+<dd>    Klasse angehoeren)
+<br>
+<dd>  - die Anzahl Out-Args des Downlink-Kommandos muss mit der
+<br>
+<dd>    Anzahl der In-Args des Uplink-Kommandos uebereinstimmen
+<br>
+<dd>  - alle Args muessen vom Typ "Float" sein
+<br>
+<dd>  - das Downlink-Kommando darf keine In-Args erwarten
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmixerconnect"><b>connect</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Uplink), s (Downlink)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen Kanal zwischen Datenlieferant
+<br>
+<dd>  (alle Subobjekte mit einer Wichtung groesser 0.0)
+<br>
+<dd>  und dem Datenempfaenger (das Parent-Objekt).
+<br>
+<dd>  "Uplink" bezeichnet das Script-Kommando an das
+<br>
+<dd>  Parent-Objekt zum Setzen des Ergebnisses, Downlink
+<br>
+<dd>  das Script-Kommando zum Abfragen der Werte.
+<br>
+<dd>  Man kann mehrere Connections definieren, die dann
+<br>
+<dd>  gleichzeitig abgearbeitet werden.
+<br>
+<dd>  Ein nmatnode Beispiel:
+<br>
+<dd>
+<br>
+<dd>      connect setdiffuse getdiffuse
+<br>
+<dd>      connect setambient getambient
+<br>
+<dd>      connect setspeculat getspecular
+<br>
+<dd>
+<br>
+<dd>  ...bewirkt folgendes:
+<br>
+<dd>  Auf jedes SubObjekt mit einer Wichtung groesser 0.0
+<br>
+<dd>  wird ein 'getdiffuse' angewendet, alle zurueckkommenden
+<br>
+<dd>  Werte werden mit der Wichtung des Subobjekts multipliziert,
+<br>
+<dd>  aufaddiert, und das Ergebnis mittels 'setdiffuse' auf das
+<br>
+<dd>  Parent angewendet. Dasselbe passiert dann nochmal mit
+<br>
+<dd>  'getambient/setambient' und 'getspecular/setspecular'.
+<br>
+<dd>
+<br>
+<dd>  So iss dat...
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmixersetnormalize"><b>setnormalize</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (Normalize)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Wenn 'true', wird das Mixer-Ergebnis durch die Summe
+<br>
+<dd>  der Wichtungen dividiert, wenn diese sich zu einem Wert
+<br>
+<dd>  groesser 1 aufaddieren. Default = true.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nmixergetnormalize"><b>getnormalize</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (Normalize)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den per 'setnormalize' definierten Wert ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nnn_cmds.cc<br>
+ <a name="nnetnode">
+<h1>nnetnode</h1>
+ <a name="nnetnode"> <dd><b>Superklasse: nxnode</b><br>
+<dd>  INFO
+<br>
+<dd>  nnetnode ist Basisklasse fuer alle Netzwerk-faehigen Objekte im
+<br>
+<dd>  Spiel. Bietet Schatten-Flag und Dispatch-Methode fuer Netzmessages.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nnetnodemarkshadow"><b>markshadow</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> b - true, wenn Schatten
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> markiert dieses vehicle als Schatten eines anderen
+<br>
+<dd> (oder auch nicht, wenn false)
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nnetnodeisshadow"><b>isshadow</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> b - true, wenn Schattenobjekt
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> -
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nnetnodesetid"><b>setid</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> i - globale VehicleID
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> die ID wird eigentlich beim Erzeugen ueber den
+<br>
+<dd> objekthandler gesetzt, kann aber hiermit veraendert
+<br>
+<dd> werden
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nnetnodegetid"><b>getid</b><br>
+<dd>
+<br>
+<dd> INPUT
+<br>
+<dd> v
+<br>
+<dd>
+<br>
+<dd> OUTPUT
+<br>
+<dd> i - globale VehicleID
+<br>
+<dd>
+<br>
+<dd> INFO
+<br>
+<dd> -
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/noctn_cmds.cc<br>
+ <a name="noctreenode">
+<h1>noctreenode</h1>
+ <a name="noctreenode"> <dd><b>Superklasse: n3dnode</b><br>
+<dd>  INFO
+<br>
+<dd>  3D-Node, die sich in einen Octree einordnen kann. Erstmal
+<br>
+<dd>  nur zum Testen der nOctree-Klasse, vielleicht wird mal mehr
+<br>
+<dd>  draus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="noctreenodesetradius"><b>setradius</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Radius)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Mit diesem Radius ordnet sich die Node in den Octree
+<br>
+<dd>  ein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="noctreenodegetradius"><b>getradius</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Radius)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den per 'setradius' eingestellten Radius ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/npsystem_cmds.cc<br>
+ <a name="nparticlesystem">
+<h1>nparticlesystem</h1>
+ <a name="nparticlesystem"> <dd><b>Superklasse: nanimnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Superklasse aller Partikel-System-Renderer.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetlifetime"><b>setlifetime</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Lifetime)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the lifetime for particles in seconds.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetlifetime"><b>getlifetime</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Lifetime)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the lifetime for particles in seconds.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetfreq"><b>setfreq</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Frequency)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the emission frequency in particles per second.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetfreq"><b>getfreq</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Frequency)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the emission frequency in particles per second.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetspeed"><b>setspeed</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Frequency)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the initial speed of particles in coordinates per second.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetspeed"><b>getspeed</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Speed)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the initial speed of particles in coordinates per second.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetaccel"><b>setaccel</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Acceleration)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the linear acceleration of particles in meter per second^2.
+<br>
+<dd>  The particle will not change its initial path through
+<br>
+<dd>  this acceleration, it will just get faster or slower along
+<br>
+<dd>  its initial emission direction.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetaccel"><b>getaccel</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Acceleration)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the linear acceleration of particles in meter per second^2.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetglobaccel"><b>setglobaccel</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (GlobalAcceleration)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the global acceleration vector which influences all
+<br>
+<dd>  particles uniformely.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetglobaccel"><b>getglobaccel</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (GlobalAcceleration)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the current global acceleration vector.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetinnercone"><b>setinnercone</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (InnerCone)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the inner cone angle in degrees that will limit the emission
+<br>
+<dd>  direction of particles.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetinnercone"><b>getinnercone</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (InnerCone)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the current inner cone angle.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetoutercone"><b>setoutercone</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (OuterCone)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the outer cone angle in degrees that will limit the emission
+<br>
+<dd>  direction of particles.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetoutercone"><b>getoutercone</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (OuterCone)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the current outer cone angle.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetspin"><b>setspin</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Spin)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the spinning speed for particles in degrees per second.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetspin"><b>getspin</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Spread)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the spinning speed for particles in degrees per second.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetspinaccel"><b>setspinaccel</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (SpinAccel)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set the spinning acceleration for particles in
+<br>
+<dd>  degrees per second^2.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetspinaccel"><b>getspinaccel</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (SpinAccel)
+<br>
+<dd>  INFO
+<br>
+<dd>  Get the spinning acceleration for particles in
+<br>
+<dd>  degrees per second^2.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetattractor"><b>setattractor</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (AttractorName)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Defines the name of an optional n3dnode object, which must be a
+<br>
+<dd>  child object of the particle system object, that will be
+<br>
+<dd>  used as an attractor, where the particles will travel to.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetattractor"><b>getattractor</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (AttractorName)
+<br>
+<dd>  INFO
+<br>
+<dd>  Return the name of the current attractor.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystembeginkeys"><b>beginkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (NumKeys)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Start per-particle key frame definition. Expects number of
+<br>
+<dd>  'setkey's to follow.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemsetkey"><b>setkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex), f (Size), f (Bounce), f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Set a per-particle keyframe.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemendkeys"><b>endkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  End the per-particle keyframe definitions.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetnumkeys"><b>getnumkeys</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  i (NumKeys)
+<br>
+<dd>  INFO
+<br>
+<dd>  Return number of per-particle keyframes.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nparticlesystemgetkey"><b>getkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (KeyIndex)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Size), f (Bounce), f (Red), f (Green), f (Blue), f (Alpha)
+<br>
+<dd>  INFO
+<br>
+<dd>  Return definition of given keyframe.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nsky_cmds.cc<br>
+ <a name="nskynode">
+<h1>nskynode</h1>
+ <a name="nskynode"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nSkyNode ist ein Himmelsrenderer. Und die Dokumentation
+<br>
+<dd>  noch nicht vollstaendig...
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nskynodesettimeofday"><b>settimeofday</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (TimeSinceMidnight)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Stellt die Zeit seit Mitternacht in Sekunden ein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nskynodegettimeofday"><b>gettimeofday</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (TimeSinceMidnight)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt die aktuell eingestellte Tageszeit ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nspsystem_cmds.cc<br>
+ <a name="nspritesystem">
+<h1>nspritesystem</h1>
+ <a name="nspritesystem"> <dd><b>Superklasse: nparticlesystem</b><br>
+<dd>  INFO
+<br>
+<dd>  Renders particle system with sprites.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/ntexn_cmds.cc<br>
+ <a name="ntexnode">
+<h1>ntexnode</h1>
+ <a name="ntexnode"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Die ntexnode definiert eine Textur in einer Visual-Hierarchie.
+<br>
+<dd>  Man klinkt ein ntexnode-Objekt irgendwo unter ein n3dnode-
+<br>
+<dd>  Objekt, in der Regel zusammen mit einem nmatnode und nvbufnode
+<br>
+<dd>  Objekt. Zusammen bilden diese Objekte ein visuelles Objekt
+<br>
+<dd>  an der Position der n3dnode, die uebrigen 3 Objekte definieren
+<br>
+<dd>  das Aussehen. Texturen muessen derzeit als 8- oder 24-Bit
+<br>
+<dd>  Bmp-File vorliegen.
+<br>
+<dd>  Das ntexnode Objekt kann entweder eine Einzeltextur, oder
+<br>
+<dd>  eine komplette Mipmap-Chain enthalten. Mehr Details unter
+<br>
+<dd>  'settexture' bzw. 'setmipmap'.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntexnodesettexture"><b>settexture</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (PixelFilename), s (AlphaFilename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert die Filenamen fuer die Textur. Der erste
+<br>
+<dd>  Parameter definiert den Filenamen fuer einen
+<br>
+<dd>  Bmp-File, der die Pixelinformation enthaelt, der
+<br>
+<dd>  zweite den Filenamen fuer einen 8-Bit-Bmp-File
+<br>
+<dd>  mit dem Alphachannel oder 'none', falls die Textur
+<br>
+<dd>  keinen Alphachannel besitzt.
+<br>
+<dd>  Das eigentliche Laden der Textur-Daten geschieht erst
+<br>
+<dd>  beim ersten Rendern des Objekts.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntexnodegettexture"><b>gettexture</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (PixelFilename), s (AlphaFilename)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt die mit 'settexture' definierten Filenamen
+<br>
+<dd>  zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntexnodesetmipmap"><b>setmipmap</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Miplevel), s (PixelFilename), s (AlphaFilename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen neuen Mipmap-Level. Es sind max.
+<br>
+<dd>  10 Mipmap-Level definierbar. Der Zusammenhang
+<br>
+<dd>  zwischen Mipmap-Level und Textur-Groesse ist
+<br>
+<dd>  hardgecodet, und zwar (size = 2^miplevel), also:
+<br>
+<dd>      0 -> 1x1
+<br>
+<dd>      1 -> 2x2
+<br>
+<dd>      2 -> 4x4
+<br>
+<dd>      3 -> 8x8
+<br>
+<dd>      4 -> 16x16
+<br>
+<dd>      5 -> 32x32
+<br>
+<dd>      6 -> 64x64
+<br>
+<dd>      7 -> 128x128
+<br>
+<dd>      8 -> 256x256
+<br>
+<dd>      9 -> 512x512
+<br>
+<dd>     10 -> 1024x1024
+<br>
+<dd>  Es duerfen weniger Miplevel definiert werden, ausserdem
+<br>
+<dd>  darf der GfxServer hoeher aufgeloeste Miplevel ignorieren.
+<br>
+<dd>  Es duerfen keine Luecken in der Mipmap-Definition
+<br>
+<dd>  vorhanden sein.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="ntexnodegetmipmap"><b>getmipmap</b><br>
+<dd>  INPUT
+<br>
+<dd>  i (Miplevel)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (PixelFilename), s (AlphaFilename)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt eine per 'setmipmap' definierte Mipmap zurueck.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nvbipol_cmds.cc<br>
+ <a name="nvbufipol">
+<h1>nvbufipol</h1>
+ <a name="nvbufipol"> <dd><b>Superklasse: nanimnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Linear interpoliert zwischen den Koordinaten-Arrays von
+<br>
+<dd>  VBuffern. Die VBuffer muessen in Form von nvbufnode-Objekten
+<br>
+<dd>  als Subobjekte am nvbufipol Objekt haengen, danach werden (wie
+<br>
+<dd>  bei der nflipflop Klasse) Keyframes definiert.
+<br>
+<dd>  Die nVBufNode-Objekte muessen identische Koordinaten-Anzahlen
+<br>
+<dd>  besitzen!
+<br>
+<dd>  Interpoliert werden defaultmaessig alle Arrays, die die VBuffer
+<br>
+<dd>  besitzen (3D-Koordinaten, Normalen, Textur-Koordinaten,
+<br>
+<dd>  Eckpunktfarben), allerdings kann man die einzelnen Komponenten
+<br>
+<dd>  gezielt abschalten, was erheblich Rechenzeit sparen kann.
+<br>
+<dd>  Besonders Normalen sind teuer, weil renormalisiert werden muessen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufipolupdatecoord"><b>updatecoord</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der 3D-Koordinaten an oder aus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufipolupdatenorm"><b>updatenorm</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der Normalen an oder aus.
+<br>
+<dd>  Sobald man die 3D-Koordinaten interpolieren laesst,
+<br>
+<dd>  sollte man auch die Normalen anschalten und umgekehrt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufipolupdatergba"><b>updatergba</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der Eckpunktfarben an/aus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufipolupdateuv"><b>updateuv</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der Texturkoordinaten an/aus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufipolupdatefnorm"><b>updatefnorm</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der Face Normals an/aus
+<br>
+<dd>  (wird fuer einen korrekten Glow-Effekt benoetigt).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufipoladdkey"><b>addkey</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Time) s (Objectname)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert einen Keyframe. Angegeben wird ein Zeitpunkt,
+<br>
+<dd>  und der Name eines (als Child angekoppelten) nvbufnode
+<br>
+<dd>  Objekts.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nvbmix_cmds.cc<br>
+ <a name="nvbufmixer">
+<h1>nvbufmixer</h1>
+ <a name="nvbufmixer"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Wichtet einen resultierenden VBuffer aus den gewichteten
+<br>
+<dd>  VBuffern der als Subobjekte angekoppelten nVBufNodes.
+<br>
+<dd>  Alle Koordinaten-Arrays werden mit ihrer Wichtung multipliziert
+<br>
+<dd>  und zusammenaddiert. Die Wichtung wird per 'setweight' der
+<br>
+<dd>  nvisnode eingestellt, Objekte mit Wichtung 0 werden von
+<br>
+<dd>  vornherein ignoriert. Es werden maximal 16 Objekte gleichzeitig
+<br>
+<dd>  in die Berechnung einbezogen.
+<br>
+<dd>  Ein nvbufmixer Objekte setzt den "aktuellen VBuffer", und
+<br>
+<dd>  kann damit ueberall verwendet werden, wo man auch ein
+<br>
+<dd>  nVBufNode-Objekt anklinken kann.
+<br>
+<dd>  Ansonsten gelten dieselben Regeln wie fuer die nvbufipol
+<br>
+<dd>  Klasse, alle angekoppelten nVBufNodes muessen identische
+<br>
+<dd>  Koordinaten-Arrays (Typen und Groesse) besitzen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufmixerupdatecoord"><b>updatecoord</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der 3D-Koordinaten an oder aus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufmixerupdatenorm"><b>updatenorm</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der Normalen an oder aus.
+<br>
+<dd>  Sobald man die 3D-Koordinaten wichten laesst,
+<br>
+<dd>  sollte man auch die Normalen anschalten und umgekehrt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufmixerupdatergba"><b>updatergba</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der Eckpunktfarben an/aus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufmixerupdateuv"><b>updateuv</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (UpdateFlag)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet die Berechnung der Texturkoordinaten an/aus.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufmixersetnormalize"><b>setnormalize</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (Normalize)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Wenn 'true', wird das Wichtungsresultat durch die
+<br>
+<dd>  Summe der Wichtungen dividiert, wenn sie groesser 1 ist.
+<br>
+<dd>  Damit wird ein Ueberlauf des Resultats vermieden.
+<br>
+<dd>  Default: true.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufmixergetnormalize"><b>getnormalize</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Normalize)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setnormalize' eingestellten Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nvbufn_cmds.cc<br>
+ <a name="nvbufnode">
+<h1>nvbufnode</h1>
+ <a name="nvbufnode"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nvbufnode definiert eine Geometrie-Beschreibung in einer
+<br>
+<dd>  Visual-Hierarchie. Ein nvbufnode Objekt wird normalerweise
+<br>
+<dd>  zusammen mit einem ntexnode und nmatnode Objekt unter ein
+<br>
+<dd>  n3dnode Objekt eingeklinkt. Alle diese Objekte zusammen
+<br>
+<dd>  definieren ein sichtbares 3D-Objekt an der Position der
+<br>
+<dd>  n3dnode. Ein nvbufnode-Objekt kann seine Daten aus einem
+<br>
+<dd>  Wavefront-obj/objf File laden.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufnodesetvbuffer"><b>setvbuffer</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (WavefrontFilename)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert den Namen des Datenfiles fuer das Objekt.
+<br>
+<dd>  Dabei muss es sich um einen Wavefront-obj oder -objf
+<br>
+<dd>  File handeln. Die Daten selbst werden erst beim ersten
+<br>
+<dd>  rendern des Objekts geladen (Load on demand sozusagen).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvbufnodegetvbuffer"><b>getvbuffer</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  s (WavefrontFilename)
+<br>
+<dd>  INFO
+<br>
+<dd>  Gibt den per 'setvbuffer' definierten Namen zurueck,
+<br>
+<dd>  oder "null".
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nvisnode_cmds.cc<br>
+ <a name="nvisnode">
+<h1>nvisnode</h1>
+ <a name="nvisnode"> <dd><b>Superklasse: nxnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nvisnode Klasse definiert Objekte, die sich in eine
+<br>
+<dd>  darstellbare Hierarchie einordnen koennen, und entweder
+<br>
+<dd>  direkt in den Scenegraph gelinkt werden, oder diese Objekte
+<br>
+<dd>  manipulieren (z.B. Animklassen).
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodechannelread"><b>channelread</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (ChannelName), s (Command)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Etabliert eine Lese-Verbindung zwischen einem Channel
+<br>
+<dd>  und einem Objekt-Slot. Vor dem Triggern des Objekts
+<br>
+<dd>  wird der angegebene Channel ausgelesen und sein Status
+<br>
+<dd>  als Scriptkommando auf das Objekt angewendet.
+<br>
+<dd>
+<br>
+<dd>  Im Augenblick werden nur 1-dimensionale Channels
+<br>
+<dd>  unterstuetzt.
+<br>
+<dd>
+<br>
+<dd>  Sichtbarkeits-Regeln fuer Channels:
+<br>
+<dd>  ===================================
+<br>
+<dd>  Wenn ein Objekt einen Channel per 'channelwrite'
+<br>
+<dd>  manipuliert, ist dieser Wert nur fuer Objekte sichtbar,
+<br>
+<dd>  die sich rechts oder ueber dem Objekt in der Hierarchie
+<br>
+<dd>  befinden ("oben/rechts" Sichtbarkeit). Man kann's auch
+<br>
+<dd>  einfacher ausdruecken: Wenn die Objekt-Hierarchie in
+<br>
+<dd>  einem Nebula-Script rausgeschrieben wird, "sehen" alle
+<br>
+<dd>  Objekte UNTER dem manipulierendem Objekt die Aenderungen.
+<br>
+<dd>  Eigentlich ganz einfach :)
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodechannelwrite"><b>channelwrite</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (ChannelName), s (Command)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Etabliert eine Schreib-Verbindung zwischen einem Channel
+<br>
+<dd>  und einem Objekt-Slot. Nach dem Triggern des Objekts
+<br>
+<dd>  wird das Ergebnis des angegebenen Scriptkommandos in
+<br>
+<dd>  den Channel geschrieben.
+<br>
+<dd>  Die Aenderung am Channel ist fuer alle Objekte rechts
+<br>
+<dd>  und ueber dem Objekt sichtbar ("oben/rechts" Regel),
+<br>
+<dd>  siehe auch 'channelread'.
+<br>
+<dd>
+<br>
+<dd>  Zur Zeit werden nur 1-dimensionale Channels unterstuetzt.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodesetweight"><b>setweight</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (Weight)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt die "Wichtung" des Objekts. Die Wichtung wird
+<br>
+<dd>  von manchen animierenden Klassen verwendet, um zu
+<br>
+<dd>  entscheiden, wie stark dieses Objekt das Gesamt-Ergebnis
+<br>
+<dd>  beeinflusst.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodegetweight"><b>getweight</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (Weight)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt die aktuelle Wichtung ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodesetminlod"><b>setminlod</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (MinLod)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Setzt den LOD-Schwellwert. Falls der aktuelle LOD-Wert
+<br>
+<dd>  kleiner ist als der hiermit festgelegte Schwellwert,
+<br>
+<dd>  wird das Objekt (und alle Subobjekte) nicht getriggert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodegetminlod"><b>getminlod</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (MinLod)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den per 'setminlod' definierten Schwellwert ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodegetcurrentlod"><b>getcurrentlod</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (CurrentLod)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den LOD-Wert ab, der momentan fuer dieses
+<br>
+<dd>  Objekt gilt. Das kann entweder der per 'setcurrentlod'
+<br>
+<dd>  definierte Override-Wert sein, ansonsten ist es
+<br>
+<dd>  der "wirkliche" anhand der Entfernung zum Beobachter
+<br>
+<dd>  definierte LOD-Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodesetstateweight"><b>setstateweight</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (StateName), f (Weight)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  *** OBSOLETE *** OBSOLETE *** OBSOLETE ***
+<br>
+<dd>  Setzt die Wichtung aller Subobjekte, deren Namen
+<br>
+<dd>  dem angegebenen Statenamen entspricht. Wird rekursiv
+<br>
+<dd>  weiter an die Subobjekte gegeben...
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodesetvisualize"><b>setvisualize</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (Visualize)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet Channel-Visualisierung fuer dieses Objekt
+<br>
+<dd>  an/aus. Wenn die Visualisierung angeschaltet ist, werden
+<br>
+<dd>  fuer jeden aktiven Channel die aktuellen Werte in
+<br>
+<dd>  Watcher-Variablen nach '/sys/var' geschrieben, sodass
+<br>
+<dd>  man sie mittel '/sys/servers/console.watch objname_*'
+<br>
+<dd>  anzeigen lassen kann.
+<br>
+<dd>  ACHTUNG: wenn ein Visnode-Objekt mehrmals pro Frame
+<br>
+<dd>  gerendert wird (zum Beispiel aus einer Database heraus),
+<br>
+<dd>  ueberschreiben sich die Channelwerte gegenseitig fuer
+<br>
+<dd>  jedes Rendern. Man sollte also sicherstellen, dass das
+<br>
+<dd>  zu beobachtende Objekt nur 1x in der Welt existiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodesetfinishedafter"><b>setfinishedafter</b><br>
+<dd>  INPUT
+<br>
+<dd>  f (TimeStamp)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Wenn der Time-Channel >= diesem Wert ist, wird das
+<br>
+<dd>  "AnimFinished" Bit gesetzt, sonst geloescht.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nvisnodegetfinishedafter"><b>getfinishedafter</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  f (TimeStamp)
+<br>
+<dd>  INFO
+<br>
+<dd>  Returniert den per 'setfinishedafter' eingestellten
+<br>
+<dd>  Wert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nwtree_cmds.cc<br>
+ <a name="nweighttree">
+<h1>nweighttree</h1>
+ <a name="nweighttree"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Ein nweighttree kann Channels ausblenden, wenn andere
+<br>
+<dd>  dominierende Channels an Wert zunehmen. Diese Beziehungen
+<br>
+<dd>  werden in Form eines binaeren Wichtungs-Baums definiert.
+<br>
+<dd>  Jede Leaf-Node im Baum stellt einen Channel dar, jeder
+<br>
+<dd>  Knoten-Punkt definiert eine Dominanz-Beziehung zwischen
+<br>
+<dd>  seinen zwei Child-Nodes.
+<br>
+<dd>  Beim Ausrechnen des Baums darf die Summe der Child-Nodes
+<br>
+<dd>  nicht groesser sein als der aktuelle Wert im Knoten
+<br>
+<dd>  (diese sind mit 1.0 initialisiert). Wenn dieser Fall
+<br>
+<dd>  doch auftritt, "verdraengt" die dominierende Child-Node
+<br>
+<dd>  die untergeordnete Child-Nodes, indem deren Wert reduziert
+<br>
+<dd>  wird, und rekursiv die Werte derer Child-Nodes ebenfalls
+<br>
+<dd>  angepasst werden. Am Ende hat man einen Baum, dessen
+<br>
+<dd>  Leaf-Nodes sich zu 1.0 aufaddieren, wobei die entsprechenden
+<br>
+<dd>  Dominanz-Regeln beachtet wurden.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nweighttreeaddleaf"><b>addleaf</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Name)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert eine Leaf-Node. Der Name der Node ist identisch
+<br>
+<dd>  mit dem Namen des Channels, der manipuliert werden soll.
+<br>
+<dd>  Kommt 'false' zurueck, wenn schon eine Node diesen
+<br>
+<dd>  Namens existiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nweighttreeaddnode"><b>addnode</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (NodeName), s (LeftChild), s (RightChild)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert eine Dominanz-Node. Das erste Argument ist
+<br>
+<dd>  der Name der Node selbst, das 2.Argument der Name
+<br>
+<dd>  der dominierenden Child-Node, das 3.Argument die
+<br>
+<dd>  untergeordnete Child-Node.
+<br>
+<dd>  Kommt 'false' zurueck, wenn entweder eine Node
+<br>
+<dd>  gleichen Namens bereits existiert, oder eine der
+<br>
+<dd>  Child-Nodes nicht gefunden wurde.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+<hr> code/src/node/nwtree_dispatch.cc<br>
+ <a name="nweighttree">
+<h1>nweighttree</h1>
+ <a name="nweighttree"> <dd><b>Superklasse: nvisnode</b><br>
+<dd>  INFO
+<br>
+<dd>  Ein nweighttree kann Channels ausblenden, wenn andere
+<br>
+<dd>  dominierende Channels an Wert zunehmen. Diese Beziehungen
+<br>
+<dd>  werden in Form eines binaeren Wichtungs-Baums definiert.
+<br>
+<dd>  Jede Leaf-Node im Baum stellt einen Channel dar, jeder
+<br>
+<dd>  Knoten-Punkt definiert eine Dominanz-Beziehung zwischen
+<br>
+<dd>  seinen zwei Child-Nodes.
+<br>
+<dd>  Beim Ausrechnen des Baums darf die Summe der Child-Nodes
+<br>
+<dd>  nicht groesser sein als der aktuelle Wert im Knoten
+<br>
+<dd>  (diese sind mit 1.0 initialisiert). Wenn dieser Fall
+<br>
+<dd>  doch auftritt, "verdraengt" die dominierende Child-Node
+<br>
+<dd>  die untergeordnete Child-Nodes, indem deren Wert reduziert
+<br>
+<dd>  wird, und rekursiv die Werte derer Child-Nodes ebenfalls
+<br>
+<dd>  angepasst werden. Am Ende hat man einen Baum, dessen
+<br>
+<dd>  Leaf-Nodes sich zu 1.0 aufaddieren, wobei die entsprechenden
+<br>
+<dd>  Dominanz-Regeln beachtet wurden.
+<br>
+<dd>--------------------------------------------------------------------
+<br>
+ <a name="nweighttreeaddleaf"><b>addleaf</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (Name)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert eine Leaf-Node. Der Name der Node ist identisch
+<br>
+<dd>  mit dem Namen des Channels, der manipuliert werden soll.
+<br>
+<dd>  Kommt 'false' zurueck, wenn schon eine Node diesen
+<br>
+<dd>  Namens existiert.
+<br>
+<dd>-----------------------------------------------------------
+<br>
+ <a name="nweighttreeaddnode"><b>addnode</b><br>
+<dd>  INPUT
+<br>
+<dd>  s (NodeName), s (LeftChild), s (RightChild)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (Success)
+<br>
+<dd>  INFO
+<br>
+<dd>  Definiert eine Dominanz-Node. Das erste Argument ist
+<br>
+<dd>  der Name der Node selbst, das 2.Argument der Name
+<br>
+<dd>  der dominierenden Child-Node, das 3.Argument die
+<br>
+<dd>  untergeordnete Child-Node.
+<br>
+<dd>  Kommt 'false' zurueck, wenn entweder eine Node
+<br>
+<dd>  gleichen Namens bereits existiert, oder eine der
+<br>
+<dd>  Child-Nodes nicht gefunden wurde.
+<br>
+<dd>-----------------------------------------------------------
+<br>
+
+<hr> code/src/node/nxnode_cmds.cc<br>
+ <a name="nxnode">
+<h1>nxnode</h1>
+ <a name="nxnode"> <dd><b>Superklasse: nroot</b><br>
+<dd>  INFO
+<br>
+<dd>  Die nxnode Klasse ist die Grundlage fuer den Aufbau
+<br>
+<dd>  triggerbarer Hierarchien und bietet ein paar Methoden
+<br>
+<dd>  an, den Triggerstrom zu beeinflussen.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nxnodesetactive"><b>setactive</b><br>
+<dd>  INPUT
+<br>
+<dd>  b (true = active, false = inactive)
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  v
+<br>
+<dd>  INFO
+<br>
+<dd>  Schaltet den Aktiv-Zustand des Objekts an oder aus.
+<br>
+<dd>  Ein aktives Objekt leitet den Trigger-Strom an alle
+<br>
+<dd>  seine Subobjekte in der Hierarchie weiter, ein
+<br>
+<dd>  inaktives Objekt blockiert.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+ <a name="nxnodegetactive"><b>getactive</b><br>
+<dd>  INPUT
+<br>
+<dd>  v
+<br>
+<dd>  OUTPUT
+<br>
+<dd>  b (true = active, false = inactive)
+<br>
+<dd>  INFO
+<br>
+<dd>  Fragt den aktuellen Aktiv/Inaktiv-Zustand des Objekts
+<br>
+<dd>  ab.
+<br>
+<dd>-------------------------------------------------------------------
+<br>
+
+</body></html>
