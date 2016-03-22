@@ -1,25 +1,28 @@
 import struct, os
 
 ''' Script settings '''
-VERBOSITY = 1
+VERBOSITY = 0
 USE_DEVELOPEMENT_FOLDER = False
 ANALYZE_ONLY = False
 
+if ANALYZE_ONLY:
+	import numpy as np
+	import matplotlib.pyplot as plt
 
 if USE_DEVELOPEMENT_FOLDER:
-	PATH = "123"
+	PATH = "viewer"
 else:
-	PATH = "../_data.npk"
+	PATH = "_data.npk"
 
 
 ''' Format Description '''
 MESH_HAS_POS = 	0b00000001 # 3 floats	Position
 MESH_HAS_NORM = 0b00000010 # 3 floats	Normal
-MESH_HAS_1_1I = 0b00000100 # 1 int 		?
-MESH_HAS_UV =   0b00001000 # 2 floats	Texture UV coordinates
-MESH_HAS_2_2F = 0b00010000 # 2 floats	?
-MESH_HAS_3_2F = 0b00100000 # 2 floats	?
-MESH_HAS_4_2F = 0b01000000 # 2 floats	?
+MESH_HAS_1_2S = 0b00000100 # 2 short 	?
+MESH_HAS_UV0 =  0b00001000 # 2 floats	Texture UV coordinates
+MESH_HAS_UV1 =  0b00010000 # 2 floats	?
+MESH_HAS_UV2 =  0b00100000 # 2 floats	?
+MESH_HAS_UV3 =  0b01000000 # 2 floats	?
 MESH_HAS_LINKS= 0b10000000 # 4 short 4 float
 
 FORMAT_UNKNOWN_1 = 1     # 0b00000001 - pos
@@ -40,6 +43,7 @@ class Mesh(object):
 	Format = 0
 	Positions = []
 	Normals = []
+	I = []
 	UVs = []
 	Quads = []
 	Triangles = []
@@ -66,18 +70,19 @@ def parseVertivesFormat(f, mesh):
 			debugString += "        Position 3f        | "
 		if mesh.Format & MESH_HAS_NORM:
 			debugString += "        Normal  3f         | "
-		if mesh.Format & MESH_HAS_1_1I:
+		if mesh.Format & MESH_HAS_1_2S:
 			debugString += " 1? 1i | "
-		if mesh.Format & MESH_HAS_UV:
-			debugString += "  Texture UV 2f   | "
-		if mesh.Format & MESH_HAS_2_2F:
-			debugString += "     2?  2f       | "
-		if mesh.Format & MESH_HAS_3_2F:
-			debugString += "     3?  2f       | "
-		if mesh.Format & MESH_HAS_4_2F:
-			debugString += "     4?  2f       | "
+		if mesh.Format & MESH_HAS_UV0:
+			debugString += "  Texture UV0 2f  | "
+		if mesh.Format & MESH_HAS_UV1:
+			debugString += "  Texture UV1 2f  | "
+		if mesh.Format & MESH_HAS_UV2:
+			debugString += "  Texture UV2 2f  | "
+		if mesh.Format & MESH_HAS_UV3:
+			debugString += "  Texture UV3 2f  | "
 		if mesh.Format & MESH_HAS_LINKS:
-			debugString += "     Links  4i         |             Links  4f               | "
+			debugString += "     Links  4i         |"
+			debugString += "             Links  4f               | "
 		print(debugString)
 
 	for i in range(mesh.NumVerts):
@@ -92,27 +97,30 @@ def parseVertivesFormat(f, mesh):
 			mesh.Normals.append(v)
 			if VERBOSITY > 1:
 				debugString += "{:8.3f} {:8.3f} {:8.3f} | ".format(v[0], v[1], v[2])
-		if mesh.Format & MESH_HAS_1_1I:
-			v = readInt(f)
+		if mesh.Format & MESH_HAS_1_2S:
+			v = readShort(f)
+			mesh.I.append(v)
+			v = readShort(f)
+			mesh.I.append(v)
 			# TODO: append to the mesh
 			if VERBOSITY > 1:
 				debugString += "{:6} | ".format(v)
-		if mesh.Format & MESH_HAS_UV:
+		if mesh.Format & MESH_HAS_UV0:
 			v = struct.unpack("<ff", f.read(8))
 			mesh.UVs.append(v)
 			if VERBOSITY > 1:
 				debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
-		if mesh.Format & MESH_HAS_2_2F:
+		if mesh.Format & MESH_HAS_UV1:
 			v = struct.unpack("<ff", f.read(8))
 			# TODO: append to the mesh
 			if VERBOSITY > 1:
 				debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
-		if mesh.Format & MESH_HAS_3_2F:
+		if mesh.Format & MESH_HAS_UV2:
 			v = struct.unpack("<ff", f.read(8))
 			# TODO: append to the mesh
 			if VERBOSITY > 1:
 				debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
-		if mesh.Format & MESH_HAS_4_2F:
+		if mesh.Format & MESH_HAS_UV3:
 			v = struct.unpack("<ff", f.read(8))
 			# TODO: append to the mesh
 			if VERBOSITY > 1:
@@ -188,15 +196,20 @@ def convert(f):
 
 	mesh.Format = Format
 
+	f.seek(DataOffset)
 	if ANALYZE_ONLY:
-		return "{}, {}, {}, {}".format(Format, mesh.NumIndices, mesh.NumQuads, mesh.NumVerts)
+		if Format & MESH_HAS_1_2S > 0:
+			mesh = parseVertivesFormat(f, mesh)
+			return (True, mesh.I)
+			return (True, np.histogram(mesh.I, bins=range(2048))[0])
+			#return "{}".format()
+		return (False, )
 
 
 	FileInfo = "Format: {4} Verts: {0} Indices: {1} Quads: {5} Data: {2} Size: {3}".format(mesh.NumVerts, mesh.NumIndices, DataOffset, mesh.DataSize, Format, mesh.NumQuads)
 	if VERBOSITY > 0:
 		print(FileInfo)
 
-	f.seek(DataOffset)
 
 	mesh = parseVertivesFormat(f, mesh)
 	mesh = parseQuads(f, mesh)
@@ -290,9 +303,18 @@ def exportToThree(mesh, fName):
 
 	f.close()
 
+analyzedData = [[], []]
+
 def saveMesh(mesh, fName):
 	if ANALYZE_ONLY:
-		print("({}, \"{}\"),".format(mesh, fName.replace('\\', '/')))
+		if mesh[0]:
+			y = mesh[1]
+			x = [len(analyzedData[0])] * len(y)
+			analyzedData[0] = analyzedData[0] + x
+			analyzedData[1] = analyzedData[1] + y
+			#print y[0], y
+			#raise NameError()
+			#print("({}, \"{}\"),".format(mesh, fName.replace('\\', '/')))
 		return
 	#exportMeshToObj(mesh, fName)
 	#exportMeshToRaw(mesh, fName)
@@ -351,4 +373,10 @@ def main():
 	convertDir(os.path.abspath(PATH))
 	logFile.close()
 
+	if ANALYZE_ONLY:
+		#data = np.concatenate((spread, center, flier_high, flier_low), 0)
+		plt.plot(analyzedData[0], analyzedData[1], 'ro')
+
+		#plt.boxplot(analyzedData)
+		plt.show()
 main()
