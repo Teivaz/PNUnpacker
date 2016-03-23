@@ -6,15 +6,6 @@ def peek(f, length=1):
     f.seek(pos)
     return data
 
-def readLine(f):
-	(size, ) = struct.unpack("<h", f.read(2))
-	format = "{}c".format(size)
-	string = struct.unpack(format, f.read(size))
-	string = "".join(string)
-	#return "{}|{} ".format(size, string)
-	return string
-
-
 def readNBytes(f, size):
 	format = "{}b".format(size)
 	data = struct.unpack(format, f.read(size))
@@ -25,96 +16,6 @@ def readBytes(f):
 	format = "{}b".format(size)
 	data = struct.unpack(format, f.read(size))
 	return "{}".format(data)
-
-def readLineS(f):
-	string = ""
-	(size, ) = struct.unpack("<h", f.read(2))
-	if size > 1:
-		(sizeS, ) = struct.unpack("<h", f.read(2))
-		format = "{0}c".format(sizeS)
-		string = struct.unpack(format, f.read(sizeS))
-		string = "".join(string)
-		size -= sizeS+2
-	if size > 0:
-		format = "{}b".format(size)
-		data = readNBytes(f, size)
-		string = "{}#{}".format(string, data)
-	#string = str(f.read(size))
-	return string
-
-def readLineL(f):
-	(size_all, wat, size) = struct.unpack("<hIh", f.read(8))
-	format = "{0}c".format(size)
-	string = struct.unpack(format, f.read(size))
-	string = "".join(string)
-	#string = str(f.read(size))
-	return string
-
-def readLineR(f):
-	(size, wat) = struct.unpack("<hI", f.read(6))
-	format = "{0}c".format(size)
-	string = struct.unpack(format, f.read(size))
-	string = "".join(string)
-	#string = str(f.read(size))
-	return string
-
-
-def tag_u(f):
-	result = []
-	result.append(readLine(f))
-	return " ".join(result)
-
-def tag_us(f):
-	result = []
-	result.append(readLineS(f))
-	return " ".join(result)
-
-def tag_SFLN(f):
-	result = []
-	result.append(readLineS(f))
-	return " ".join(result)
-
-def tag_STGT(f):
-	result = []
-	result.append(readLineS(f))
-	return " ".join(result)
-
-def tag_STXT(f):
-	result = []
-	result.append(readLineL(f))
-	result.append(readLine(f))
-	return " ".join(result)
-
-def tag_SRAD(f):
-	result = []
-	result.append(readLine(f))
-	return " ".join(result)
-
-def tag_SBNC(f):
-	result = []
-	result.append(readLine(f))
-	return " ".join(result)
-
-def tag_SDMG(f):
-	result = []
-	result.append(readLine(f))
-	return " ".join(result)
-
-def tag_STOU(f):
-	result = []
-	result.append(readLine(f))
-	return " ".join(result)
-
-def tag_new(f):
-	result = []
-	result.append(readLine(f))
-	result.append(readLine(f))
-	return " ".join(result)
-
-def tag_sel(f):
-	result = []
-	result.append(readLine(f))
-	return " ".join(result)
 
 ######################
 def isValid(f):
@@ -129,6 +30,9 @@ def peekShortI(f):
 def readInt(f):
 	(value, ) = struct.unpack("<I", f.read(4))
 	return "{}".format(value)
+def readBool(f):
+	(value, ) = struct.unpack("<?", f.read(1))
+	return "{}".format(value)
 
 def readFloat(f):
 	(value, ) = struct.unpack("<f", f.read(4))
@@ -142,57 +46,33 @@ def readString(f):
 	#print string
 	return string
 
+def readVoid(f):
+	return ""
+
+Arguments = {
+	"s": readString,
+	"o": readString,
+	"f": readFloat,
+	"i": readInt,
+	"v": readVoid,
+	"b": readBool,
+}
+
 ######################
 def op_new(f):
 	a0 = readString(f)
 	a1 = readString(f)
-	return "{}, {}".format(a0, a1)
+	return a0, a1
 def op_sel(f):
 	a0 = readString(f)
-	return "{}".format(a0)
+	return a0
 
-def fun_v_v(f):
-	return ""
-def fun_v_f(f):
-	a = readFloat(f)
-	return "{}".format(a)
-def fun_v_i(f):
-	a = readInt(f)
-	return "{}".format(a)
-def fun_v_fff(f):
-	a0 = readFloat(f)
-	a1 = readFloat(f)
-	a2 = readFloat(f)
-	return "{}, {}, {}".format(a0, a1, a2)
-def fun_b_ff(f):
-	f.read(4) # ret bool
-	a0 = readFloat(f)
-	a1 = readFloat(f)
-	return "{}, {}".format(a0, a1)
-def fun_v_o(f): #TODO object may be not a string
-	a = readString(f)
-	return a
-def fun_v_s(f):
-	a = readString(f)
-	return a
-def fun_v_ss(f):
-	a0 = readString(f)
-	a1 = readString(f)
-	return "{}, {}".format(a0, a1)
-def fun_b_ss(f):
-	f.read(4) # ret bool
-	a0 = readString(f)
-	a1 = readString(f)
-	return "{}, {}".format(a0, a1)
-def fun_v_i6f(f):
-	a0 = readInt(f)
-	a1 = readFloat(f)
-	a2 = readFloat(f)
-	a3 = readFloat(f)
-	a4 = readFloat(f)
-	a5 = readFloat(f)
-	a6 = readFloat(f)
-	return "{}, {}, {}, {}, {}, {}".format(a0, a1, a2, a3, a4, a5, a6)
+def readArgs(f, code):
+	result = []
+	for c in code:
+		v = Arguments[c](f)
+		result.append(v)
+	return ", ".join(result)
 
 
 Operators = {
@@ -201,61 +81,121 @@ Operators = {
 }
 
 Functions = {
-	#"NOB0": (tag_u, ""),
-	"SRAD": (fun_v_f, "setradius"),
-	"SCHN": (fun_v_s, "setchannel"),
-	"STGT": (fun_v_o, "settarget"), #object
-	"SXYZ": (fun_v_fff, "sxyz"),
-	"TXYZ": (fun_v_fff, "txyz"),
-	"STXT": (fun_b_ss, "settexture"), #TODO return bool
-	"SFAF": (fun_v_f, "setfinishedafter"),
-	"SRPT": (fun_v_s, "setreptype"),
-	"SKEY": (fun_v_i6f, "setkey"),
-	"BKEY": (fun_v_i, "beginkeys"),
-	"EKEY": (fun_v_v, "endkeys"),
-	"SSCL": (fun_v_f, "setscale"),
+	"SRAD": ("f", "setradius"),
+	"SCHN": ("s", "setchannel"),
+	"STGT": ("o", "settarget"), #object
+	"SXYZ": ("fff", "sxyz"),
+	"TXYZ": ("fff", "txyz"),
+	"STXT": ("iss", "settexture"), #TODO return bool
+	"SFAF": ("f", "setfinishedafter"),
+	"SRPT": ("s", "setreptype"),
+	"SKEY": ("iffffff", "setkey"),
+	"BKEY": ("i", "beginkeys"),
+	"EKEY": ("v", "endkeys"),
+	"SSCL": ("f", "setscale"),
+	"CNCT": ("s", "connect"),
 
 	#nparticlesystem
-	"SLFT": (fun_v_f, "setlifetime"),
-	"SFRQ": (fun_v_f, "setfreq"),
-	"SSPD": (fun_v_f, "setspeed"),
-	"SACC": (fun_v_fff, "setaccel"),
-	"SICN": (fun_v_f, "setinnercone"),
-	"SOCN": (fun_v_f, "setinnercone"),
-	"SSPN": (fun_v_f, "setspin"),
-	"SSPA": (fun_v_f, "setspinaccel"),
+	"SLFT": ("f", "setlifetime"),
+	"SFRQ": ("f", "setfreq"),
+	"SSPD": ("f", "setspeed"),
+	"SACC": ("fff", "setaccel"),
+	"SICN": ("f", "setinnercone"),
+	"SOCN": ("f", "setinnercone"),
+	"SSPN": ("f", "setspin"),
+	"SSPA": ("f", "setspinaccel"),
 	#"SSTR" :
-	"SEMT": (fun_v_s, "setemmiter"),
+	"SEMT": ("s", "setemmiter"),
 
+	#nchnsplitter
+	"BGKS": ("ii", "beginkeys"),
+	"SK3F": ("iffff", "keys"),
+	"ENKS": ("v", "endkeys"),
 
-	"SMSN": (fun_v_s, "_SMSN"),
+	"SMSN": ("s", "_SMSN"),
+	"SSHP": ("s", "_SSHP"),
+	"SCLC": ("s", "_SCLC"),
+	"SDMG": ("b", "_SDMG"),
+	"SBNC": ("b", "_SBNC"),
+	"SVIS": ("s", "_SVIS"),
+	"SAUD": ("s", "_SAUD"),
+	"STOU": ("f", "_STOU"),
+	"DACC": ("v", "_DACC"),
+	"AACC": ("s", "_AACC"),
+	"DDEC": ("v", "_DDEC"),
+	"SWAC": ("s", "_SWAC"),
+	"SFIL": ("s", "_SFIL"),
+	"SMMD": ("ff", "_SMMD"),
+	"SPRI": ("f", "_SPRI"),
+	"SUTR": ("s", "_SUTR"),
+	"SRDO": ("b", "_SRDO"),
+	"SSTR": ("b", "_SSTR"),
+	"SACT": ("b", "_SACT"),
+	"SLOP": ("b", "_SLOP"),
+	"SHMA": ("f", "_SHMA"),
+	"SHMR": ("f", "_SHMR"),
+	"SXEY": ("f", "_SXEY"),
+	"SMAS": ("f", "_SMAS"),
+	"SVCL": ("s", "_SVCL"),
+	"STYP": ("s", "_STYP"),
+	"SCLR": ("ffff", "_SCLR"),
+	"SSPR": ("b", "_SSPR"),
+	"SUCD": ("b", "_SUCD"),
+	"SUNM": ("b", "_SUNM"),
+	"SUCL": ("b", "_SUCL"),
+	"SUV0": ("b", "_SUV0"),
+	"SUV1": ("b", "_SUV1"),
+	"SUV2": ("b", "_SUV2"),
+	"SUV3": ("b", "_SUV3"),
+	"SFLN": ("s", "_SFLN"),
+	"STMS": ("fff", "_STMS"),
+	"SSDM": ("b", "_SSDM"),
+	"RXYZ": ("fff", "_RXYZ"),
+	"SCSH": ("b", "_SCSH"),
+	"M_SH": ("b", "_M_SH"),
+	"SRMV": ("b", "_SRMV"),
+	"SPSD": ("b", "_SPSD"),
+	"STHC": ("b", "_STHC"),
+	"SVBL": ("b", "_SVBL"),
+	"SAFM": ("b", "_SAFM"),
+	"SAFU": ("b", "_SAFU"),
+	"SIQS": ("b", "_SIQS"),
+	"SFCA": ("b", "_SFCA"),
+	"SINS": ("b", "_SINS"),
+	"ENEM": ("b", "_ENEM"),
+	"SUEP": ("b", "_SUEP"),
+	"SSMD": ("b", "_SSMD"),
+	"SQSA": ("b", "_SQSA"),
+	"STHR": ("b", "_STHR"),
+	"CCML": ("v", "_CCML"),
 
-
-
-
-	"SFLN": (fun_v_s, "_SFLN"),
-	"STMS": (fun_v_fff, "_STMS"),
+	"SATT": ("fff", "?SATT"),
+	"SARM": ("si", "?SARM"),
+	"SDTP": ("s", "?SDTP"),
+	"SDBR": ("s", "?SDBR"),
+	"ADBR": ("sfffffff", "?ADBR"),
 }
 
-'''
-"SFLN": (tag_SFLN, "_SFLN"),
-"SBNC": (tag_SBNC, "_SBNC"),
-"SDMG": (tag_SDMG, "_SDMG"),
-"STOU": (tag_STOU, "_STOU"),
-"SMSN": (readLineS, "_SMSN"),
-"SOCN": (readLineS, "_SOCN"),
-"SACC": (readLineS, "_SACC"),
-"SICN": (readLineS, "_SICN"),
-"SLFT": (readLineS, "_SLFT"),
-"SRAC": (readLineS, "_SRAC"),
-"SSTB": (readLineS, "_SSTB"),
-"SUTR": (readLineS, "_SUTR"),
-"SAFM": (readLineS, "_SAFM"),
-"SAFU": (readLineS, "_SAFU"),
-"SAUD": (readBytes, "_SAUD"),
-"SRDO": (readBytes, "_SRDO"),
-'''
+Classes = {}
+Stack = []
 
+def executeOperator(name, args):
+	if name == "new":
+		Stack.append(args[0])
+	elif name == "sel":
+		Stack.pop()
+
+def executeFunction(name, args):
+	c = Stack[-1]
+	if c not in Classes:
+		Classes[c] = set()
+	Classes[c].add(name)
+
+def printClasses():
+	for pair in Classes.iteritems():
+		print("{}".format(pair[0]))
+		for m in pair[1]:
+			print("    {}".format(m))
 
 def parseTag(tag, f):
 	name = tag
@@ -263,23 +203,28 @@ def parseTag(tag, f):
 
 	pos = f.tell()
 	if tag in Operators:
-		(fun, name) = Operators[tag]
-		result = fun(f)
+		(op, name) = Operators[tag]
+		opResult = op(f)
+		executeOperator(name, opResult)
+		result = " ".join(opResult)
 	elif tag in Functions:
-		(fun, name) = Functions[tag]
+		(code, name) = Functions[tag]
 		tagSize = readShortI(f)
-		result = fun(f)
+		result = readArgs(f, code)
+		executeFunction(name, result)
 		f.seek(pos + tagSize + 2)
 	else:
+		name = "#" + name
 		result = readBytes(f)
+		executeFunction(name, result)
 
-	print("{} {}".format(name, result))
-	#print("0x{:0x}: {} {}".format(pos, name, result))
 	return
-
-	if tag[0] == "S": tag_u,(f, tag)
-	return tag_u(f, tag)
-
+	if 1:
+		print("{} {}".format(name, result))
+	else:
+		if name[0] == "#" or name[0] == "?":
+			print("{} {}".format(name, result))
+	#print("0x{:0x}: {} {}".format(pos, name, result))
 
 def readTag(f):
 	tag = struct.unpack("4c", f.read(4))
@@ -313,5 +258,6 @@ def main():
 	f = open(name, "rb")
 	parse(f)
 	f.close()
+	printClasses()
 
 main()
