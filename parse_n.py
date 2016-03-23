@@ -1,4 +1,12 @@
-import struct
+import struct, os
+
+USE_DEVELOPEMENT_FOLDER = False
+ANALYZE_ONLY = True
+
+if USE_DEVELOPEMENT_FOLDER:
+	PATH = "a_ammo.n/_main.n"
+else:
+	PATH = "_data.npk"
 
 def peek(f, length=1):
     pos = f.tell()
@@ -13,6 +21,7 @@ def readNBytes(f, size):
 
 def readBytes(f):
 	(size, ) = struct.unpack("<h", f.read(2))
+	if ANALYZE_ONLY: return ""
 	format = "{}b".format(size)
 	data = struct.unpack(format, f.read(size))
 	return "{}".format(data)
@@ -40,6 +49,7 @@ def readFloat(f):
 
 def readString(f):
 	size = readShortI(f)
+	if ANALYZE_ONLY: return ""
 	format = "{}c".format(size)
 	string = struct.unpack(format, f.read(size))
 	string = "".join(string)
@@ -186,16 +196,20 @@ def executeOperator(name, args):
 		Stack.pop()
 
 def executeFunction(name, args):
+	if len(Stack) == 0:
+		Stack.append("GLOBAL")
 	c = Stack[-1]
 	if c not in Classes:
 		Classes[c] = set()
 	Classes[c].add(name)
 
 def printClasses():
+	f = open("classes.txt", "w")
 	for pair in Classes.iteritems():
-		print("{}".format(pair[0]))
+		f.write("{}\n".format(pair[0]))
 		for m in pair[1]:
-			print("    {}".format(m))
+			f.write("    {}\n".format(m))
+	f.close()
 
 def parseTag(tag, f):
 	name = tag
@@ -214,9 +228,11 @@ def parseTag(tag, f):
 		executeFunction(name, result)
 		f.seek(pos + tagSize + 2)
 	else:
+		tagSize = readShortI(f)
 		name = "#" + name
 		result = readBytes(f)
 		executeFunction(name, result)
+		f.seek(pos + tagSize + 2)
 
 	return
 	if 1:
@@ -237,7 +253,6 @@ def readTag(f):
 		print("exception at {} - {}".format(tag, hex(pos)))
 
 def parse(f):
-
 	f.seek(0, 2)
 	fileEnd = f.tell()
 	f.seek(0, 0)
@@ -247,17 +262,44 @@ def parse(f):
 		print("file invalid")
 		return
 
-	print readString(f)
+	header = readString(f)
+	#print header
 
 	while f.tell() != fileEnd:
 		readTag(f)
 
+def convertFile(name):
+	f = open(name, "rb")
+	try:
+		parse(f)
+	except:
+		None
+	f.close()
+
+def listDirsAndFiles(path):
+	dirs = os.listdir(path)
+	dPath = []
+	fPath = []
+	for d in dirs:
+		fullPath = os.path.join(path, d)
+		if os.path.isdir(fullPath):
+			dPath.append(fullPath)
+		elif os.path.splitext(fullPath)[-1] == ".n":
+			fPath.append(fullPath)
+	return dPath, fPath
+
+def convertDir(path):
+	if not os.path.isdir(path):
+		convertFile(path)
+	else:
+		dNames, fNames = listDirsAndFiles(path)
+		for fName in fNames:
+			convertFile(fName)
+		for dName in dNames:
+			convertDir(dName)
 
 def main():
-	name = "a_ammo.n/_main.n"
-	f = open(name, "rb")
-	parse(f)
-	f.close()
+	convertDir(os.path.abspath(PATH))
 	printClasses()
 
 main()
