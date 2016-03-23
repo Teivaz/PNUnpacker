@@ -1,8 +1,10 @@
 import struct
 
-def isValid(f):
-	(footprint, ) = struct.unpack("<I", f.read(4))
-	return footprint == 0x4e4f4230 #NOB0
+def peek(f, length=1):
+    pos = f.tell()
+    data = f.read(length) # Might try/except this line, and finally: f.seek(pos)
+    f.seek(pos)
+    return data
 
 def readLine(f):
 	(size, ) = struct.unpack("<h", f.read(2))
@@ -11,6 +13,7 @@ def readLine(f):
 	string = "".join(string)
 	#return "{}|{} ".format(size, string)
 	return string
+
 
 def readNBytes(f, size):
 	format = "{}b".format(size)
@@ -113,39 +116,92 @@ def tag_sel(f):
 	result.append(readLine(f))
 	return " ".join(result)
 
-###################
-def fun_v_f(f):
-	f.read(2)
-	r = struct.unpack("<f", f.read(4))
-	return "{}".format(r[0])
-def fun_v_fff(f):
-	f.read(2)
-	v = struct.unpack("<fff", f.read(12))
-	return "{}, {}, {}".format(v[0], v[1], v[2])
-def fun_v_o(f): #TODO object may be not a string
-	f.read(2)
-	s = readLine(f)
-	return s
-def fun_v_s(f):
-	f.read(2)
-	s = readLine(f)
-	return s
-def fun_v_ss(f):
-	f.read(2)
-	s1 = readLine(f)
-	s2 = readLine(f)
-	return "{}, {}".format(s1, s2)
-def fun_b_ss(f):
-	f.read(2)
-	f.read(4)
-	s1 = readLine(f)
-	s2 = readLine(f)
-	return "{}, {}".format(s1, s2)
+######################
+def isValid(f):
+	(footprint, ) = struct.unpack("<I", f.read(4))
+	return footprint == 0x4e4f4230 #NOB0
+def readShortI(f):
+	(size, ) = struct.unpack("<h", f.read(2))
+	return size
+def peekShortI(f):
+	(size, ) = struct.unpack("<h", peek(f,2))
+	return size
+def readInt(f):
+	(value, ) = struct.unpack("<I", f.read(4))
+	return "{}".format(value)
 
-Tags = {
-	"NOB0": (tag_u, ""),
-	"_new": (tag_new, "new"),
-	"_sel": (tag_sel, "sel"),
+def readFloat(f):
+	(value, ) = struct.unpack("<f", f.read(4))
+	return "{}".format(value)
+
+def readString(f):
+	size = readShortI(f)
+	format = "{}c".format(size)
+	string = struct.unpack(format, f.read(size))
+	string = "".join(string)
+	#print string
+	return string
+
+######################
+def op_new(f):
+	a0 = readString(f)
+	a1 = readString(f)
+	return "{}, {}".format(a0, a1)
+def op_sel(f):
+	a0 = readString(f)
+	return "{}".format(a0)
+
+def fun_v_v(f):
+	return ""
+def fun_v_f(f):
+	a = readFloat(f)
+	return "{}".format(a)
+def fun_v_i(f):
+	a = readInt(f)
+	return "{}".format(a)
+def fun_v_fff(f):
+	a0 = readFloat(f)
+	a1 = readFloat(f)
+	a2 = readFloat(f)
+	return "{}, {}, {}".format(a0, a1, a2)
+def fun_b_ff(f):
+	f.read(4) # ret bool
+	a0 = readFloat(f)
+	a1 = readFloat(f)
+	return "{}, {}".format(a0, a1)
+def fun_v_o(f): #TODO object may be not a string
+	a = readString(f)
+	return a
+def fun_v_s(f):
+	a = readString(f)
+	return a
+def fun_v_ss(f):
+	a0 = readString(f)
+	a1 = readString(f)
+	return "{}, {}".format(a0, a1)
+def fun_b_ss(f):
+	f.read(4) # ret bool
+	a0 = readString(f)
+	a1 = readString(f)
+	return "{}, {}".format(a0, a1)
+def fun_v_i6f(f):
+	a0 = readInt(f)
+	a1 = readFloat(f)
+	a2 = readFloat(f)
+	a3 = readFloat(f)
+	a4 = readFloat(f)
+	a5 = readFloat(f)
+	a6 = readFloat(f)
+	return "{}, {}, {}, {}, {}, {}".format(a0, a1, a2, a3, a4, a5, a6)
+
+
+Operators = {
+	"_new": (op_new, "new"),
+	"_sel": (op_sel, "sel"),
+}
+
+Functions = {
+	#"NOB0": (tag_u, ""),
 	"SRAD": (fun_v_f, "setradius"),
 	"SCHN": (fun_v_s, "setchannel"),
 	"STGT": (fun_v_o, "settarget"), #object
@@ -154,37 +210,71 @@ Tags = {
 	"STXT": (fun_b_ss, "settexture"), #TODO return bool
 	"SFAF": (fun_v_f, "setfinishedafter"),
 	"SRPT": (fun_v_s, "setreptype"),
+	"SKEY": (fun_v_i6f, "setkey"),
+	"BKEY": (fun_v_i, "beginkeys"),
+	"EKEY": (fun_v_v, "endkeys"),
+	"SSCL": (fun_v_f, "setscale"),
 
-	"SFLN": (tag_SFLN, "_SFLN"),
-	"SBNC": (tag_SBNC, "_SBNC"),
-	"SDMG": (tag_SDMG, "_SDMG"),
-	"STOU": (tag_STOU, "_STOU"),
-	"SMSN": (readLineS, "_SMSN"),
-	"SOCN": (readLineS, "_SOCN"),
-	"SACC": (readLineS, "_SACC"),
-	"SICN": (readLineS, "_SICN"),
-	"SLFT": (readLineS, "_SLFT"),
-	"SRAC": (readLineS, "_SRAC"),
-	"SSTB": (readLineS, "_SSTB"),
-	"SUTR": (readLineS, "_SUTR"),
-	"SAFM": (readLineS, "_SAFM"),
-	"SAFU": (readLineS, "_SAFU"),
-	"SAUD": (readBytes, "_SAUD"),
-	"SRDO": (readBytes, "_SRDO"),
+	#nparticlesystem
+	"SLFT": (fun_v_f, "setlifetime"),
+	"SFRQ": (fun_v_f, "setfreq"),
+	"SSPD": (fun_v_f, "setspeed"),
+	"SACC": (fun_v_fff, "setaccel"),
+	"SICN": (fun_v_f, "setinnercone"),
+	"SOCN": (fun_v_f, "setinnercone"),
+	"SSPN": (fun_v_f, "setspin"),
+	"SSPA": (fun_v_f, "setspinaccel"),
+	#"SSTR" :
+	"SEMT": (fun_v_s, "setemmiter"),
+
+
+	"SMSN": (fun_v_s, "_SMSN"),
+
+
+
+
+	"SFLN": (fun_v_s, "_SFLN"),
+	"STMS": (fun_v_fff, "_STMS"),
 }
+
+'''
+"SFLN": (tag_SFLN, "_SFLN"),
+"SBNC": (tag_SBNC, "_SBNC"),
+"SDMG": (tag_SDMG, "_SDMG"),
+"STOU": (tag_STOU, "_STOU"),
+"SMSN": (readLineS, "_SMSN"),
+"SOCN": (readLineS, "_SOCN"),
+"SACC": (readLineS, "_SACC"),
+"SICN": (readLineS, "_SICN"),
+"SLFT": (readLineS, "_SLFT"),
+"SRAC": (readLineS, "_SRAC"),
+"SSTB": (readLineS, "_SSTB"),
+"SUTR": (readLineS, "_SUTR"),
+"SAFM": (readLineS, "_SAFM"),
+"SAFU": (readLineS, "_SAFU"),
+"SAUD": (readBytes, "_SAUD"),
+"SRDO": (readBytes, "_SRDO"),
+'''
+
 
 def parseTag(tag, f):
 	name = tag
 	result = ""
+
 	pos = f.tell()
-	if tag in Tags:
-		(fun, name) = Tags[tag]
+	if tag in Operators:
+		(fun, name) = Operators[tag]
 		result = fun(f)
+	elif tag in Functions:
+		(fun, name) = Functions[tag]
+		tagSize = readShortI(f)
+		result = fun(f)
+		f.seek(pos + tagSize + 2)
 	else:
 		result = readBytes(f)
 
 	print("{} {}".format(name, result))
-	#print("0x{:0x}: {} {}".format(pos, tag, result))
+	#print("0x{:0x}: {} {}".format(pos, name, result))
 	return
 
 	if tag[0] == "S": tag_u,(f, tag)
@@ -195,21 +285,24 @@ def readTag(f):
 	tag = struct.unpack("4c", f.read(4))
 	tag = "".join(tag)[::-1]
 	pos = f.tell()
+	parseTag(tag, f)
 	try:
-		parseTag(tag, f)
+		None
 	except:
 		print("exception at {} - {}".format(tag, hex(pos)))
 
 def parse(f):
 
-	if(not isValid(f)):
-		print("file invalid")
-		return
-
 	f.seek(0, 2)
 	fileEnd = f.tell()
 	f.seek(0, 0)
 
+	(footprint, ) = struct.unpack("<I", f.read(4))
+	if footprint != 0x4e4f4230: #NOB0
+		print("file invalid")
+		return
+
+	print readString(f)
 
 	while f.tell() != fileEnd:
 		readTag(f)
