@@ -49,7 +49,6 @@ def readFloat(f):
 
 def readString(f):
 	size = readShortI(f)
-	if ANALYZE_ONLY: return ""
 	format = "{}c".format(size)
 	string = struct.unpack(format, f.read(size))
 	string = "".join(string)
@@ -224,13 +223,19 @@ def parseTag(tag, f):
 	elif tag in Functions:
 		(code, name) = Functions[tag]
 		tagSize = readShortI(f)
-		result = readArgs(f, code)
+		if ANALYZE_ONLY: 
+			result = ""
+		else:
+			result = readArgs(f, code)
 		executeFunction(name, result)
 		f.seek(pos + tagSize + 2)
 	else:
 		tagSize = readShortI(f)
 		name = "#" + name
-		result = readBytes(f)
+		if ANALYZE_ONLY: 
+			result = ""
+		else:
+			result = readBytes(f)
 		executeFunction(name, result)
 		f.seek(pos + tagSize + 2)
 
