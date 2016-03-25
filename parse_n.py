@@ -4,9 +4,9 @@ USE_DEVELOPEMENT_FOLDER = False
 ANALYZE_ONLY = True
 
 if USE_DEVELOPEMENT_FOLDER:
-	PATH = "a_ammo.n/_main.n"
+	PATH = "_main.n"
 else:
-	PATH = "_data.npk"
+	PATH = "../_data.npk"
 
 def peek(f, length=1):
     pos = f.tell()
@@ -14,17 +14,6 @@ def peek(f, length=1):
     f.seek(pos)
     return data
 
-def readNBytes(f, size):
-	format = "{}b".format(size)
-	data = struct.unpack(format, f.read(size))
-	return "{}".format(data)
-
-def readBytes(f):
-	(size, ) = struct.unpack("<h", f.read(2))
-	if ANALYZE_ONLY: return ""
-	format = "{}b".format(size)
-	data = struct.unpack(format, f.read(size))
-	return "{}".format(data)
 
 ######################
 def isValid(f):
@@ -37,7 +26,7 @@ def peekShortI(f):
 	(size, ) = struct.unpack("<h", peek(f,2))
 	return size
 def readInt(f):
-	(value, ) = struct.unpack("<I", f.read(4))
+	(value, ) = struct.unpack("<i", f.read(4))
 	return "{}".format(value)
 def readBool(f):
 	(value, ) = struct.unpack("<?", f.read(1))
@@ -57,6 +46,22 @@ def readString(f):
 
 def readVoid(f):
 	return ""
+
+def readNBytes(f, size):
+	format = "{}b".format(size)
+	data = struct.unpack(format, f.read(size))
+	return "{}".format(data)
+
+def readBytes(f):
+	(size, ) = struct.unpack("<h", f.read(2))
+	if ANALYZE_ONLY: return ""
+	strSize = peekShortI(f)
+	if strSize+2 == size:
+		return readString(f)
+	format = "{}b".format(size)
+	data = struct.unpack(format, f.read(size))
+	return "{}".format(data)
+
 
 Arguments = {
 	"s": readString,
@@ -116,6 +121,17 @@ Functions = {
 	#"SSTR" :
 	"SEMT": ("s", "setemmiter"),
 
+	#njointanim
+	"BGJN": ("i", "beginjoints"),
+	"EDJN": ("v", "endjoints"),
+	"ADJN": ("isifffffff", "addjoint"),
+	"BGST": ("i", "beginstates"),
+	"ADST": ("is", "addstate"),
+	"BGSA": ("ii", "_BGSA"),
+	"ADSA": ("iis", "_ADSA"),
+	"EDSA": ("i", "_EDSA"),
+	"EDST": ("v", "endstates"),
+
 	#nchnsplitter
 	"BGKS": ("ii", "beginkeys"),
 	"SK3F": ("iffff", "keys"),
@@ -161,6 +177,7 @@ Functions = {
 	"SSDM": ("b", "_SSDM"),
 	"RXYZ": ("fff", "_RXYZ"),
 	"SCSH": ("b", "_SCSH"),
+	"SCSD": ("b", "_SCSD"),
 	"M_SH": ("b", "_M_SH"),
 	"SRMV": ("b", "_SRMV"),
 	"SPSD": ("b", "_SPSD"),
@@ -177,6 +194,11 @@ Functions = {
 	"SQSA": ("b", "_SQSA"),
 	"STHR": ("b", "_STHR"),
 	"CCML": ("v", "_CCML"),
+	"SSKM": ("s", "_SSKM"),
+	"SCSS": ("b", "_SCSS"),
+	"SSTC": ("s", "_SSTC"),
+	"SANF": ("s", "_SANF"),
+
 
 	"SATT": ("fff", "?SATT"),
 	"SARM": ("si", "?SARM"),
@@ -218,29 +240,32 @@ def parseTag(tag, f):
 	if tag in Operators:
 		(op, name) = Operators[tag]
 		opResult = op(f)
-		executeOperator(name, opResult)
+		if ANALYZE_ONLY:
+			executeOperator(name, opResult)
 		result = " ".join(opResult)
 	elif tag in Functions:
 		(code, name) = Functions[tag]
 		tagSize = readShortI(f)
 		if ANALYZE_ONLY: 
 			result = ""
+			executeFunction(name, result)
 		else:
 			result = readArgs(f, code)
-		executeFunction(name, result)
 		f.seek(pos + tagSize + 2)
 	else:
-		tagSize = readShortI(f)
+		tagSize = peekShortI(f)
 		name = "#" + name
 		if ANALYZE_ONLY: 
 			result = ""
+			executeFunction(name, result)
 		else:
 			result = readBytes(f)
-		executeFunction(name, result)
 		f.seek(pos + tagSize + 2)
 
-	return
-	if 1:
+	if ANALYZE_ONLY:
+		return
+
+	if True:
 		print("{} {}".format(name, result))
 	else:
 		if name[0] == "#" or name[0] == "?":
@@ -257,18 +282,20 @@ def readTag(f):
 	except:
 		print("exception at {} - {}".format(tag, hex(pos)))
 
-def parse(f):
+def parse(f, path):
 	f.seek(0, 2)
 	fileEnd = f.tell()
 	f.seek(0, 0)
 
 	(footprint, ) = struct.unpack("<I", f.read(4))
 	if footprint != 0x4e4f4230: #NOB0
-		print("file invalid")
+		print("file invalid: {}".format(path))
 		return
 
 	header = readString(f)
-	#print header
+
+	if not ANALYZE_ONLY:
+		print header
 
 	while f.tell() != fileEnd:
 		readTag(f)
@@ -276,9 +303,9 @@ def parse(f):
 def convertFile(name):
 	f = open(name, "rb")
 	try:
-		parse(f)
-	except:
-		None
+		parse(f, name)
+	except NameError as e:
+		print("Parsing error {}".format(e))
 	f.close()
 
 def listDirsAndFiles(path):
@@ -305,6 +332,7 @@ def convertDir(path):
 
 def main():
 	convertDir(os.path.abspath(PATH))
-	printClasses()
+	if ANALYZE_ONLY:
+		printClasses()
 
 main()
