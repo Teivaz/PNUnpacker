@@ -33,31 +33,33 @@ Generates the standard verts and faces lists.
 """
 
 
-import bpy, struct
+import bpy, bmesh, struct
 
-
-VERBOSITY = 0
-MESH_HAS_POS =  0b00000001 # 3 floats   Position
-MESH_HAS_NORM = 0b00000010 # 3 floats   Normal
-MESH_HAS_1_1I = 0b00000100 # 1 int      ?
-MESH_HAS_UV =   0b00001000 # 2 floats   Texture UV coordinates
-MESH_HAS_2_2F = 0b00010000 # 2 floats   ?
-MESH_HAS_3_2F = 0b00100000 # 2 floats   ?
-MESH_HAS_4_2F = 0b01000000 # 2 floats   ?
-MESH_HAS_LINKS= 0b10000000 # 4 short 4 float
+''' Format Description '''
+MESH_HAS_POS =   0b00000001 # has xyz
+MESH_HAS_NORM =  0b00000010 # has normals
+MESH_HAS_COLOR = 0b00000100 # has color
+MESH_HAS_UV0 =   0b00001000 # has UV0
+MESH_HAS_UV1 =   0b00010000 # has UV1
+MESH_HAS_UV2 =   0b00100000 # has UV2
+MESH_HAS_UV3 =   0b01000000 # has UV3
+MESH_HAS_LINKS=  0b10000000 # has joint indices for skinning and weights
 
 class Mesh(object):
     Format = 0
-    Positions = []
-    Normals = []
-    UVs = []
-    Quads = []
-    Triangles = []
+    Positions = [] # [ (x, y, z), (x, y, z) ]
+    Normals = [] # [ (x, y, z), (x, y, z) ]
+    Colors = [] # [c, c, c]
+    UV0 = [] # [ (u, v), (u, v) ]
+    UV1 = [] # [ (u, v), (u, v) ]
+    UV2 = [] # [ (u, v), (u, v) ]
+    UV3 = [] # [ (u, v), (u, v) ]
+    WingedEdges = [] # [ (a, b, c, d), (a, b, c, d) ]
+    Indices = [] # [ (a, b, c), (a, b, c) ]
     NumVerts = 0
-    NumQuads = 0
+    NumWingedEdges = 0
     NumIndices = 0
     DataSize = 0
-
 
 def readInt(f):
     (r, ) = struct.unpack("<I", f.read(4))
@@ -69,162 +71,118 @@ def readFloat(f):
     (r, ) = struct.unpack("<f", f.read(4))
     return r
 
-def parseVertivesFormat(f, mesh):
-    if VERBOSITY > 1:
-        debugString = ""
-        if mesh.Format & MESH_HAS_POS:
-            debugString += "        Position 3f        | "
-        if mesh.Format & MESH_HAS_NORM:
-            debugString += "        Normal  3f         | "
-        if mesh.Format & MESH_HAS_1_1I:
-            debugString += " 1? 1i | "
-        if mesh.Format & MESH_HAS_UV:
-            debugString += "  Texture UV 2f   | "
-        if mesh.Format & MESH_HAS_2_2F:
-            debugString += "     2?  2f       | "
-        if mesh.Format & MESH_HAS_3_2F:
-            debugString += "     3?  2f       | "
-        if mesh.Format & MESH_HAS_4_2F:
-            debugString += "     4?  2f       | "
-        if mesh.Format & MESH_HAS_LINKS:
-            debugString += "     Links  4i         |             Links  4f               | "
-        print(debugString)
-
+def parseVerticesFormat(f, mesh):
     for i in range(mesh.NumVerts):
-        debugString = ""
         if mesh.Format & MESH_HAS_POS:
             v = struct.unpack("<fff", f.read(12))
             mesh.Positions.append(v)
-            if VERBOSITY > 1:
-                debugString += "{:8.3f} {:8.3f} {:8.3f} | ".format(v[0], v[1], v[2])
         if mesh.Format & MESH_HAS_NORM:
             v = struct.unpack("<fff", f.read(12))
             mesh.Normals.append(v)
-            if VERBOSITY > 1:
-                debugString += "{:8.3f} {:8.3f} {:8.3f} | ".format(v[0], v[1], v[2])
-        if mesh.Format & MESH_HAS_1_1I:
-            v = readInt(f)
-            # TODO: append to the mesh
-            if VERBOSITY > 1:
-                debugString += "{:6} | ".format(v)
-        if mesh.Format & MESH_HAS_UV:
+        if mesh.Format & MESH_HAS_COLOR:
+            (v,) = struct.unpack("<I", f.read(4))
+            mesh.Colors.append(v)
+        if mesh.Format & MESH_HAS_UV0:
             v = struct.unpack("<ff", f.read(8))
-            mesh.UVs.append(v)
-            if VERBOSITY > 1:
-                debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
-        if mesh.Format & MESH_HAS_2_2F:
+            mesh.UV0.append(v)
+        if mesh.Format & MESH_HAS_UV1:
             v = struct.unpack("<ff", f.read(8))
-            # TODO: append to the mesh
-            if VERBOSITY > 1:
-                debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
-        if mesh.Format & MESH_HAS_3_2F:
+            mesh.UV1.append(v)
+        if mesh.Format & MESH_HAS_UV2:
             v = struct.unpack("<ff", f.read(8))
-            # TODO: append to the mesh
-            if VERBOSITY > 1:
-                debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
-        if mesh.Format & MESH_HAS_4_2F:
+            mesh.UV2.append(v)
+        if mesh.Format & MESH_HAS_UV3:
             v = struct.unpack("<ff", f.read(8))
-            # TODO: append to the mesh
-            if VERBOSITY > 1:
-                debugString += "{:8.3f} {:8.3f} | ".format(v[0], v[1])
+            mesh.UV3.append(v)
         if mesh.Format & MESH_HAS_LINKS:
-            (a1, a2, a3, a4) = struct.unpack("<hhhh", f.read(8))
+            a = struct.unpack("<hhhh", f.read(8))
             v = struct.unpack("<ffff", f.read(16))
-            # TODO: append to the mesh
-            if VERBOSITY > 1:
-                debugString += "{:5} {:5} {:5} {:5} | {:8.3f} {:8.3f} {:8.3f} {:8.3f} | ".format(a1, a2, a3, a4, v[0], v[1], v[2], v[3])
-        if VERBOSITY > 1:
-            print(debugString)
-
+            mesh.WingedEdges.append((a, v))
     return mesh
         
 def parseIndexArray(f, mesh):
-    Indices = mesh.Triangles
+    Indices = mesh.Indices
     for i in range(mesh.NumIndices):
         tell = f.tell()
         index = readShort(f)
-        if VERBOSITY > 2:
-            print("{0}: {1}".format(hex(tell), index))
         Indices.append(index)
     return mesh
 
 def indicesToTriangles(f, mesh):
-    indices = mesh.Triangles
+    indices = mesh.Indices
     triangles = int(mesh.NumIndices / 3)
     result = []
     for i in range(triangles):
         index = (indices[i*3+0], indices[i*3+1], indices[i*3+2])
         result.append(index)
-        if VERBOSITY > 1:
-            print("{:5} {:5} {:5}".format(index[0], index[1], index[2]))
-    mesh.Triangles = result
+    mesh.Indices = result
     return mesh
 
 def indicesToTriangleStrip(f, mesh):
-    indices = mesh.Triangles
+    indices = mesh.Indices
     triangles = int((mesh.NumIndices-1) / 2)
     result = []
     for i in range(triangles):
         index = (indices[i*2+0], indices[i*2+1], indices[i*2+2])
         result.append(index)
-        if VERBOSITY > 1:
-            print("{:5} {:5} {:5}".format(index[0], index[1], index[2]))
-    mesh.Triangles = result
+    mesh.Indices = result
     return mesh
 
 def parseQuads(f, mesh):
-    result = mesh.Quads
-    for i in range(mesh.NumQuads):
+    result = mesh.WingedEdges
+    for i in range(mesh.NumWingedEdges):
         quad = struct.unpack("<HHHH", f.read(4*2))
         quad = (quad[0], quad[1], quad[2], quad[3])
         result.append(quad)
-        if VERBOSITY > 1:
-            print("{:5} {:5} {:5} {:5}".format(quad[0], quad[1], quad[2], quad[3]))
+    mesh.WingedEdges = result
     return mesh
 
 def convert(f):
     footprint = readInt(f)
     if 0x4e565831 != footprint:
         raise NameError("File is not recognized as .NVX")
-
     mesh = Mesh()
-
     mesh.NumVerts = readInt(f)
     mesh.NumIndices = readInt(f)
-    mesh.NumQuads = readInt(f)
+    mesh.NumWingedEdges = readInt(f)
     Format = readInt(f)
     DataOffset = readInt(f)
     mesh.DataSize = readInt(f)
     mesh.Format = Format
-
-    FileInfo = "Format: {4} Verts: {0} Indices: {1} Quads: {5} Data: {2} Size: {3}".format(mesh.NumVerts, mesh.NumIndices, DataOffset, mesh.DataSize, Format, mesh.NumQuads)
-    if VERBOSITY > 0:
-        print(FileInfo)
-
     f.seek(DataOffset)
-
-    mesh = parseVertivesFormat(f, mesh)
+    mesh = parseVerticesFormat(f, mesh)
     mesh = parseQuads(f, mesh)
     mesh = parseIndexArray(f, mesh)
     mesh = indicesToTriangles(f, mesh)
-
     return mesh
 
 def readMesh(filename, objName):
     filehandle = open(filename, "rb")
-
     mesh = convert(filehandle)
-    Vertices = mesh.Positions
-    Normals = mesh.Normals
-    Uvs = mesh.UVs
-    Indices = mesh.Triangles
+    filehandle.close()
 
+    #uv = bm.loops.layers.uv.new('UV0')
 
-    mesh = bpy.data.meshes.new(objName)
-    mesh.from_pydata(Vertices, [], Indices)
-    mesh.normals_split_custom_set_from_vertices(Normals)
+    m = bpy.data.meshes.new(objName)
+    m.from_pydata(mesh.Positions, [], mesh.Indices)
+    m.normals_split_custom_set_from_vertices(mesh.Normals)
 
-    return mesh
+    if len(mesh.UV0) > 0:
+        m.uv_textures.new("UV0")
+    
+
+    bm = bmesh.new()
+    bm.from_mesh(m)
+    uv_layer = bm.loops.layers.uv[0]
+
+    nFaces = len(bm.faces)
+    for fi in range(nFaces):
+        indices = mesh.Indices[fi]
+        for i in range(3):
+            bm.faces[fi].loops[i][uv_layer].uv = mesh.UV0[indices[i]]
+    bm.to_mesh(m)
+
+    return m
 
 
 def addMeshObj(mesh, objName):
@@ -249,3 +207,5 @@ def read(filepath):
     objName = bpy.path.display_name_from_filepath(filepath)
     mesh = readMesh(filepath, objName)
     addMeshObj(mesh, objName)
+
+read(r'd:/projects/islander_old/nvx/skin.nvx')

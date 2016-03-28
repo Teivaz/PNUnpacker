@@ -1,7 +1,7 @@
 import struct, os
 
 ''' Script settings '''
-VERBOSITY = 0
+VERBOSITY = 2
 USE_DEVELOPEMENT_FOLDER = True
 ANALYZE_ONLY = False
 
@@ -10,7 +10,7 @@ if ANALYZE_ONLY:
 	import matplotlib.pyplot as plt
 
 if USE_DEVELOPEMENT_FOLDER:
-	PATH = "../a_ammo.n"
+	PATH = "d:/projects/islander_old/nvx/skin.nvx"
 else:
 	PATH = "_data.npk"
 
@@ -325,6 +325,8 @@ def listDirsAndFiles(path):
 	return dPath, fPath
 
 def convertDir(path):
+	if not os.path.isdir(path):
+		return convertFile(path)
 	dNames, fNames = listDirsAndFiles(path)
 	for fName in fNames:
 		convertFile(fName)
