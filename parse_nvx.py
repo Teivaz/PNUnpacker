@@ -2,7 +2,7 @@ import struct, os
 
 ''' Script settings '''
 VERBOSITY = 0
-USE_DEVELOPEMENT_FOLDER = False
+USE_DEVELOPEMENT_FOLDER = True
 ANALYZE_ONLY = False
 
 if ANALYZE_ONLY:
@@ -10,34 +10,20 @@ if ANALYZE_ONLY:
 	import matplotlib.pyplot as plt
 
 if USE_DEVELOPEMENT_FOLDER:
-	PATH = "viewer"
+	PATH = "a_ammo.n"
 else:
 	PATH = "_data.npk"
 
 
 ''' Format Description '''
-MESH_HAS_POS = 	0b00000001 # 3 floats	Position
-MESH_HAS_NORM = 0b00000010 # 3 floats	Normal
-MESH_HAS_1_2S = 0b00000100 # 2 short 	?
-MESH_HAS_UV0 =  0b00001000 # 2 floats	Texture UV coordinates
-MESH_HAS_UV1 =  0b00010000 # 2 floats	?
-MESH_HAS_UV2 =  0b00100000 # 2 floats	?
-MESH_HAS_UV3 =  0b01000000 # 2 floats	?
-MESH_HAS_LINKS= 0b10000000 # 4 short 4 float
-
-FORMAT_UNKNOWN_1 = 1     # 0b00000001 - pos
-FORMAT_UNKNOWN_5 = 5     # 0b00000101 - pos, ?
-FORMAT_UNKNOWN_121 = 121 # 0b01111001 - ...
-FORMAT_UNKNOWN_3 = 3     # 0b00000011 - pos, norm
-FORMAT_UNKNOWN_11 = 11   # 0b00001011 - pos, norm, uv
-FORMAT_UNKNOWN_27 = 27   # 0b00011011 - pos, norm, uv, ?
-FORMAT_UNKNOWN_139 = 139 # 0b10001011 - pos, norm, uv, ?
-
-FORMAT_UNKNOWN_59 = 59   # 0b00111011 - pos, norm, uv, ?, ?, ?
-FORMAT_UNKNOWN_19 = 19   # 0b00010011 - pos, norm, ?
-FORMAT_UNKNOWN_123 = 123 # 0b01111011 - ...
-
-''' /Defines '''
+MESH_HAS_POS = 	0b00000001 # has xyz
+MESH_HAS_NORM = 0b00000010 # has normals
+MESH_HAS_1_2S = 0b00000100 # has color
+MESH_HAS_UV0 =  0b00001000 # has UV0
+MESH_HAS_UV1 =  0b00010000 # has UV1
+MESH_HAS_UV2 =  0b00100000 # has UV2
+MESH_HAS_UV3 =  0b01000000 # has UV3
+MESH_HAS_LINKS= 0b10000000 # has joint indices for skinning and weights
 
 class Mesh(object):
 	Format = 0
@@ -48,10 +34,9 @@ class Mesh(object):
 	Quads = []
 	Triangles = []
 	NumVerts = 0
-	NumQuads = 0
+	NumWingedEdges = 0
 	NumIndices = 0
 	DataSize = 0
-
 
 def readInt(f):
 	(r, ) = struct.unpack("<I", f.read(4))
@@ -81,8 +66,8 @@ def parseVertivesFormat(f, mesh):
 		if mesh.Format & MESH_HAS_UV3:
 			debugString += "  Texture UV3 2f  | "
 		if mesh.Format & MESH_HAS_LINKS:
-			debugString += "     Links  4i         |"
-			debugString += "             Links  4f               | "
+			debugString += "     Joints 4i         |"
+			debugString += "             Joints 4f               | "
 		print(debugString)
 
 	for i in range(mesh.NumVerts):
@@ -170,7 +155,7 @@ def indicesToTriangleStrip(f, mesh):
 
 def parseQuads(f, mesh):
 	result = mesh.Quads
-	for i in range(mesh.NumQuads):
+	for i in range(mesh.NumWingedEdges):
 		quad = struct.unpack("<HHHH", f.read(4*2))
 		quad = (quad[0], quad[1], quad[2], quad[3])
 		result.append(quad)
@@ -182,18 +167,14 @@ def convert(f):
 	footprint = readInt(f)
 	if 0x4e565831 != footprint:
 		raise NameError("File is not recognized as .NVX")
-
 	mesh = Mesh()
-
 	mesh.NumVerts = readInt(f)
 	mesh.NumIndices = readInt(f)
-	mesh.NumQuads = readInt(f)
+	mesh.NumWingedEdges = readInt(f)
 	Format = readInt(f)
 	DataOffset = readInt(f)
 	mesh.DataSize = readInt(f)
-
 	mesh.Format = Format
-
 	f.seek(DataOffset)
 	if ANALYZE_ONLY:
 		if Format & MESH_HAS_1_2S > 0:
@@ -203,17 +184,13 @@ def convert(f):
 			#return "{}".format()
 		return (False, )
 
-
-	FileInfo = "Format: {4} Verts: {0} Indices: {1} Quads: {5} Data: {2} Size: {3}".format(mesh.NumVerts, mesh.NumIndices, DataOffset, mesh.DataSize, Format, mesh.NumQuads)
+	FileInfo = "Format: {4} Verts: {0} Indices: {1} Quads: {5} Data: {2} Size: {3}".format(mesh.NumVerts, mesh.NumIndices, DataOffset, mesh.DataSize, Format, mesh.NumWingedEdges)
 	if VERBOSITY > 0:
 		print(FileInfo)
-
-
 	mesh = parseVertivesFormat(f, mesh)
 	mesh = parseQuads(f, mesh)
 	mesh = parseIndexArray(f, mesh)
 	mesh = indicesToTriangles(f, mesh)
-
 	return mesh
 
 def exportMeshToObj(mesh, fName):
@@ -226,7 +203,6 @@ def exportMeshToObj(mesh, fName):
 		f.write("vn {0:.6f} {1:.6f} {2:.6f}\n".format(vn[0], vn[1], vn[2]))
 	for vt in mesh[2]:
 		f.write("vt {0:.6f} {1:.6f}\n".format(vt[0], vt[1]))
-
 	f.write("s off\n")
 	indexes = mesh[3]
 	indexNum = len(indexes)
@@ -250,7 +226,6 @@ def exportMeshToObj(mesh, fName):
 
 def exportMeshToRaw(mesh, fName):
 	f = open(fName + ".raw", "w")
-
 	verts = mesh[0]
 	indexes = mesh[3]
 	indexNum = len(indexes)
@@ -260,7 +235,6 @@ def exportMeshToRaw(mesh, fName):
 		b = verts[indexes[i][1]]
 		c = verts[indexes[i][2]]
 		f.write(strFormat.format(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]))
-
 	f.close()
 
 def exportToThree(mesh, fName):
@@ -325,25 +299,15 @@ def convertFile(name):
 	f = open(name, "rb")
 
 	try:
-
-		try:
-			mesh = convert(f)
-		except NameError as e:
-			error = "Error in file `{0}`:\n\t{1}".format(name, e)
-			#print(error)
-			logFile.write(error + "\n")
-			f.close()
-			return
-
+		mesh = convert(f)
 	except NameError as e:
-		error = "Error in file `{0}`: {1}".format(name, e)
+		error = "Error in file `{0}`:\n\t{1}".format(name, e)
 		logFile.write(error + "\n")
 		f.close()
 		pass
 	else:
 		f.close()
 		saveMesh(mesh, name)
-
 
 def listDirsAndFiles(path):
 	dirs = os.listdir(path)
@@ -356,7 +320,6 @@ def listDirsAndFiles(path):
 		elif os.path.splitext(fullPath)[-1] == ".nvx":
 			fPath.append(fullPath)
 	return dPath, fPath
-
 
 def convertDir(path):
 	dNames, fNames = listDirsAndFiles(path)

@@ -2,11 +2,12 @@ import struct, os
 
 USE_DEVELOPEMENT_FOLDER = False
 ANALYZE_ONLY = True
+TARGET_TAG = "BGCN"
 
 if USE_DEVELOPEMENT_FOLDER:
 	PATH = "_main.n"
 else:
-	PATH = "../_data.npk"
+	PATH = "_data.npk"
 
 def peek(f, length=1):
     pos = f.tell()
@@ -54,7 +55,6 @@ def readNBytes(f, size):
 
 def readBytes(f):
 	(size, ) = struct.unpack("<h", f.read(2))
-	if ANALYZE_ONLY: return ""
 	strSize = peekShortI(f)
 	if strSize+2 == size:
 		return readString(f)
@@ -115,7 +115,7 @@ Functions = {
 	"SSPD": ("f", "setspeed"),
 	"SACC": ("fff", "setaccel"),
 	"SICN": ("f", "setinnercone"),
-	"SOCN": ("f", "setinnercone"),
+	"SOCN": ("f", "setoutercone"),
 	"SSPN": ("f", "setspin"),
 	"SSPA": ("f", "setspinaccel"),
 	#"SSTR" :
@@ -136,6 +136,32 @@ Functions = {
 	"BGKS": ("ii", "beginkeys"),
 	"SK3F": ("iffff", "keys"),
 	"ENKS": ("v", "endkeys"),
+
+	#nhousemenu
+	"SMRD": ("f", "_SMRD"),
+	"STAD": ("f", "_STAD"),
+	"SISP": ("f", "_SISP"),
+	"SIDS": ("f", "_SIDS"),
+
+	#ncloud
+	"BCDS": ("if", "_BCDS"),
+	"SLNF": ("f", "_SLNF"),
+	"ECDS": ("v", "enableclouds"),
+
+	#nmissileengine3
+	"SIDL": ("f", "_SIDL"),
+	"SGVF": ("f", "_SGVF"),
+	"SMXS": ("f", "_SMXS"),
+	"SAGL": ("f", "_SAGL"),
+
+	#nmeshcluster2
+	"SSMS": ("s", "_SSMS"),
+	"SCTS": ("b", "_SCTS"),
+	"SRTJ": ("s", "_SRTJ"),
+
+	#ncurvearraynode
+	"BGCN": ("i", "beginconnects"),
+	"EDCN": ("v", "endconnects"),
 
 	"SMSN": ("s", "_SMSN"),
 	"SSHP": ("s", "_SSHP"),
@@ -198,6 +224,30 @@ Functions = {
 	"SCSS": ("b", "_SCSS"),
 	"SSTC": ("s", "_SSTC"),
 	"SANF": ("s", "_SANF"),
+	"SACO": ("f", "_SACO"),
+	"SSTB": ("f", "_SSTB"),
+	"SUTE": ("s", "_SUTE"),
+
+
+	"SAMV": ("b", "_SAMV"),
+	"SART": ("b", "_SART"),
+	"IGNB": ("b", "_IGNB"),
+	"IGNS": ("b", "_IGNS"),
+	"IGNF": ("b", "_IGNF"),
+
+	"SPOS": ("fff", "_SPOS"),
+	"SDIR": ("fff", "_SDIR"),
+	"SEGY": ("f", "_SEGY"),
+	"SCTM": ("f", "_SCTM"),
+	"RTMD": ("f", "_RTMD"),
+	"SPOP": ("i", "_SPOP"),
+	"SAUE": ("f", "_SAUE"),
+	"SMCG": ("i", "_SMCG"),
+	"SCRG": ("i", "_SCRG"),
+	"SRTI": ("f", "_SRTI"),
+	"SHMC": ("fff", "_SHMC"),
+	"SRAC": ("f", "_SRAC"),
+
 
 
 	"SATT": ("fff", "?SATT"),
@@ -212,14 +262,14 @@ Stack = []
 
 def executeOperator(name, args):
 	if name == "new":
-		Stack.append(args[0])
+		Stack.append((args[0], args[1]))
 	elif name == "sel":
 		Stack.pop()
 
 def executeFunction(name, args):
 	if len(Stack) == 0:
 		Stack.append("GLOBAL")
-	c = Stack[-1]
+	c = Stack[-1][0]
 	if c not in Classes:
 		Classes[c] = set()
 	Classes[c].add(name)
@@ -232,42 +282,49 @@ def printClasses():
 			f.write("    {}\n".format(m))
 	f.close()
 
+def isOperator(tag):
+	return tag in Operators
+
 def parseTag(tag, f):
 	name = tag
 	result = ""
 
 	pos = f.tell()
-	if tag in Operators:
+	if isOperator(tag):
 		(op, name) = Operators[tag]
 		opResult = op(f)
-		if ANALYZE_ONLY:
-			executeOperator(name, opResult)
+		executeOperator(name, opResult)
 		result = " ".join(opResult)
-	elif tag in Functions:
-		(code, name) = Functions[tag]
-		tagSize = readShortI(f)
-		if ANALYZE_ONLY: 
-			result = ""
-			executeFunction(name, result)
-		else:
-			result = readArgs(f, code)
-		f.seek(pos + tagSize + 2)
+		if not ANALYZE_ONLY: 
+			print("{} {};".format(name, result))
 	else:
-		tagSize = peekShortI(f)
-		name = "#" + name
-		if ANALYZE_ONLY: 
-			result = ""
+		(tp, obj) = Stack[-1]
+		shouldRead = not ANALYZE_ONLY or tag == TARGET_TAG
+		if tag in Functions:
+			(code, name) = Functions[tag]
+			tagSize = readShortI(f)
+			if shouldRead: 
+				result = readArgs(f, code)
+			else:
+				result = ""
 			executeFunction(name, result)
 		else:
-			result = readBytes(f)
+			tagSize = peekShortI(f)
+			name = "#" + name
+			if shouldRead: 
+				result = readBytes(f)
+			else:
+				result = ""
+			executeFunction(name, result)
+		if shouldRead:
+			print("{}.{}({});".format(obj, name, result))
 		f.seek(pos + tagSize + 2)
 
 	if ANALYZE_ONLY:
 		return
 
-	if True:
-		print("{} {}".format(name, result))
-	else:
+
+	if False:
 		if name[0] == "#" or name[0] == "?":
 			print("{} {}".format(name, result))
 	#print("0x{:0x}: {} {}".format(pos, name, result))
@@ -289,7 +346,8 @@ def parse(f, path):
 
 	(footprint, ) = struct.unpack("<I", f.read(4))
 	if footprint != 0x4e4f4230: #NOB0
-		print("file invalid: {}".format(path))
+		if not ANALYZE_ONLY:
+			print("file invalid: {}".format(path))
 		return
 
 	header = readString(f)
@@ -332,7 +390,7 @@ def convertDir(path):
 
 def main():
 	convertDir(os.path.abspath(PATH))
-	if ANALYZE_ONLY:
-		printClasses()
+	#if ANALYZE_ONLY:
+	#	printClasses()
 
 main()
