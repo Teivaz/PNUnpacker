@@ -69,7 +69,7 @@ def parseVerticesFormat(f, mesh):
 		if mesh.Format & MESH_HAS_UV3:
 			debugString += "  Texture UV3 2f  | "
 		if mesh.Format & MESH_HAS_LINKS:
-			debugString += "     Joints 4i         |"
+			debugString += "      Joints 4i         |"
 			debugString += "             Joints 4f               | "
 		print(debugString)
 

@@ -54,6 +54,7 @@ class Mesh(object):
     UV1 = [] # [ (u, v), (u, v) ]
     UV2 = [] # [ (u, v), (u, v) ]
     UV3 = [] # [ (u, v), (u, v) ]
+    Groups = [] # [ ( (ia, ib, ic, id), (wa, wb, wc, wd) ), ... ]
     WingedEdges = [] # [ (a, b, c, d), (a, b, c, d) ]
     Indices = [] # [ (a, b, c), (a, b, c) ]
     NumVerts = 0
@@ -97,7 +98,7 @@ def parseVerticesFormat(f, mesh):
         if mesh.Format & MESH_HAS_LINKS:
             a = struct.unpack("<hhhh", f.read(8))
             v = struct.unpack("<ffff", f.read(16))
-            mesh.WingedEdges.append((a, v))
+            mesh.Groups.append((a, v))
     return mesh
         
 def parseIndexArray(f, mesh):
@@ -156,56 +157,66 @@ def convert(f):
     mesh = indicesToTriangles(f, mesh)
     return mesh
 
-def readMesh(filename, objName):
+def assignGroups(mesh, obj):
+    linkGroups = {}
+    for i in range(mesh.NumVerts):
+        (groups, weights) = mesh.Groups[i]
+        for l in range(4):
+            group = groups[l]
+            if group == -1:
+                break
+            if group not in linkGroups:
+                linkGroups[group] = []
+            linkGroups[group].append((i, weights[l]))
+    for group, vertices in linkGroups.items():
+        vg = obj.vertex_groups.new(name=str(group))
+        for (index, weight) in vertices:
+            #add index to group with weight
+            vg.add([index], weight, 'ADD')
+
+
+def addMesh(filename, objName):
     filehandle = open(filename, "rb")
     mesh = convert(filehandle)
     filehandle.close()
-
-    #uv = bm.loops.layers.uv.new('UV0')
-
     m = bpy.data.meshes.new(objName)
     m.from_pydata(mesh.Positions, [], mesh.Indices)
     m.normals_split_custom_set_from_vertices(mesh.Normals)
 
-    if len(mesh.UV0) > 0:
+    hasUV = len(mesh.UV0) > 0
+    if hasUV:
         m.uv_textures.new("UV0")
-    
+        bm = bmesh.new()
+        bm.from_mesh(m)
+        uv_layer = bm.loops.layers.uv[0]
 
-    bm = bmesh.new()
-    bm.from_mesh(m)
-    uv_layer = bm.loops.layers.uv[0]
+        nFaces = len(bm.faces)
+        bm.faces.ensure_lookup_table()
+        for fi in range(nFaces):
+            indices = mesh.Indices[fi]
+            for i in range(3):
+                bm.faces[fi].loops[i][uv_layer].uv = mesh.UV0[indices[i]]
+        bm.to_mesh(m)
 
-    nFaces = len(bm.faces)
-    for fi in range(nFaces):
-        indices = mesh.Indices[fi]
-        for i in range(3):
-            bm.faces[fi].loops[i][uv_layer].uv = mesh.UV0[indices[i]]
-    bm.to_mesh(m)
-
-    return m
-
-
-def addMeshObj(mesh, objName):
     scn = bpy.context.scene
 
     for o in scn.objects:
         o.select = False
-
-    mesh.update()
-    mesh.validate()
-
-    nobj = bpy.data.objects.new(objName, mesh)
+    m.update()
+    m.validate()
+    nobj = bpy.data.objects.new(objName, m)
     scn.objects.link(nobj)
     nobj.select = True
 
     if scn.objects.active is None or scn.objects.active.mode == 'OBJECT':
         scn.objects.active = nobj
+    assignGroups(mesh, nobj)
+    return nobj
+
 
 
 def read(filepath):
     #convert the filename to an object name
     objName = bpy.path.display_name_from_filepath(filepath)
-    mesh = readMesh(filepath, objName)
-    addMeshObj(mesh, objName)
+    addMesh(filepath, objName)
 
-read(r'd:/projects/islander_old/nvx/skin.nvx')
