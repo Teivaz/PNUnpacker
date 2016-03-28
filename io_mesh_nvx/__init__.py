@@ -36,12 +36,13 @@ if "bpy" in locals():
     import importlib
     if "import_nvx" in locals():
         importlib.reload(import_nvx)
+    if "import_n" in locals():
+        importlib.reload(import_n)
 else:
     import bpy
 
 from bpy.props import StringProperty, BoolProperty
 from bpy_extras.io_utils import ExportHelper
-
 
 class NvxImporter(bpy.types.Operator):
     """Load NVX triangle mesh data"""
@@ -64,8 +65,30 @@ class NvxImporter(bpy.types.Operator):
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+class NImporter(bpy.types.Operator):
+    """Load N bones data"""
+    bl_idname = "import_script.n"
+    bl_label = "Import N"
+    bl_options = {'UNDO'}
+
+    filepath = StringProperty(
+            subtype='FILE_PATH',
+            )
+    filter_glob = StringProperty(default="*.n", options={'HIDDEN'})
+
+    def execute(self, context):
+        from . import import_n
+        import_n.read(self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
 def menu_import(self, context):
     self.layout.operator(NvxImporter.bl_idname, text="Nebula mesh (.nvx)")
+    self.layout.operator(NImporter.bl_idname, text="Nebula script (.n)")
 
 def register():
     bpy.utils.register_module(__name__)
