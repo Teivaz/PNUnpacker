@@ -21,7 +21,7 @@ def isValid(f):
 	(footprint, ) = struct.unpack("<I", f.read(4))
 	return footprint == 0x4e4f4230 #NOB0
 def readShortI(f):
-	(size, ) = struct.unpack("<h", f.read(2))
+	(size, ) = struct.unpack("<H", f.read(2))
 	return size
 def peekShortI(f):
 	(size, ) = struct.unpack("<h", peek(f,2))
@@ -39,11 +39,9 @@ def readFloat(f):
 
 def readString(f):
 	size = readShortI(f)
-	format = "{}c".format(size)
-	string = struct.unpack(format, f.read(size))
-	string = "".join(string)
-	#print string
-	return string
+	format = "{}s".format(size)
+	(string,) = struct.unpack(format, f.read(size))
+	return string.decode("utf-8")
 
 def readVoid(f):
 	return ""
@@ -54,7 +52,7 @@ def readNBytes(f, size):
 	return "{}".format(data)
 
 def readBytes(f):
-	#(size, ) = struct.unpack("<h", f.read(2))
+	(size, ) = struct.unpack("<h", f.read(2))
 	#strSize = peekShortI(f)
 	#if strSize+2 == size:
 	#	return readString(f)
@@ -94,188 +92,253 @@ Operators = {
 	"_sel": (op_sel, "sel"),
 }
 
-Functions = {
-	"SRAD": ("f", "setradius"),
-	"SCHN": ("s", "setchannel"),
-	"STGT": ("o", "settarget"), #object
-	"SXYZ": ("fff", "sxyz"),
-	"TXYZ": ("fff", "txyz"),
-	"STXT": ("iss", "settexture"), #TODO return bool
-	"SFAF": ("f", "setfinishedafter"),
-	"SRPT": ("s", "setreptype"),
-	"SKEY": ("ifs", "setkey"),
-	"BKEY": ("i", "beginkeys"),
-	"EKEY": ("v", "endkeys"),
-	"SSCL": ("f", "setscale"),
-	"CNCT": ("s", "connect"),
 
-	#nparticlesystem
-	"SLFT": ("f", "setlifetime"),
-	"SFRQ": ("f", "setfreq"),
-	"SSPD": ("f", "setspeed"),
-	"SACC": ("fff", "setaccel"),
-	"SICN": ("f", "setinnercone"),
-	"SOCN": ("f", "setoutercone"),
-	"SSPN": ("f", "setspin"),
-	"SSPA": ("f", "setspinaccel"),
-	#"SSTR" :
-	"SEMT": ("s", "setemmiter"),
+Classes = {
+	'nchnsplitter': {
+		'SKEY': ('ifs', 'setkey'),
+		'SRPT': ('s', 'setreptype'),
+		'SSCL': ('f', 'setscale'),
+		'SCHN': ('s', 'setchannel'),
+		'BKEY': ('i', 'beginkeys'),
+		'EKEY': ('v', 'endkeys'),
 
-	#njointanim
-	"BGJN": ("i", "beginjoints"),
-	"EDJN": ("v", "endjoints"),
-	"ADJN": ("isifffffff", "addjoint"),
-	"BGST": ("i", "beginstates"),
-	"ADST": ("is", "addstate"),
-	"BGSA": ("ii", "beginstateanims"),
-	"ADSA": ("iis", "addstateanim"),
-	"EDSA": ("i", "endstateanims"),
-	"EDST": ("v", "endstates"),
-	"BGHP": ("i", "beginhardpoints"),
-	"ADHP": ("iis", "addhardpoint"),
-	"EDHP": ("v", "endhardpoints"),
+		#'BGKS': ('ii', 'beginkeys'),
+		#'ENKS': ('v', 'endkeys'),
 
-	#nchnsplitter
-	"BGKS": ("ii", "beginkeys"),
-	"SK3F": ("iffff", "keys"),
-	"ENKS": ("v", "endkeys"),
-
-	#nipol
-	"SK1F": ("iff", "setkey1f"),
-
-	#nchnmodulator
-	"BGIN": ("i", "begin"),
-	"SET_": ("iss", "set"),
-	"END_": ("v", "end"),
-
-	#nhousemenu
-	"SMRD": ("f", "_SMRD"),
-	"STAD": ("f", "_STAD"),
-	"SISP": ("f", "_SISP"),
-	"SIDS": ("f", "_SIDS"),
-
-	#ncloud
-	"BCDS": ("if", "_BCDS"),
-	"SLNF": ("f", "_SLNF"),
-	"ECDS": ("v", "enableclouds"),
-
-	#nmissileengine3
-	"SIDL": ("f", "_SIDL"),
-	"SGVF": ("f", "_SGVF"),
-	"SMXS": ("f", "_SMXS"),
-	"SAGL": ("f", "_SAGL"),
-
-	#nmeshcluster2
-	"SSMS": ("s", "_SSMS"),
-	"SCTS": ("b", "_SCTS"),
-	"SRTJ": ("s", "_SRTJ"),
-
-	#ncurvearraynode
-	"BGCN": ("i", "beginconnects"),
-	"EDCN": ("v", "endconnects"),
-
-	#nweighttree
-	"ANOD": ("sss", "addnode"),
-	"ALEF": ("s", "addleaf"),
-
-	"SMSN": ("s", "_SMSN"),
-	"SSHP": ("s", "_SSHP"),
-	"SCLC": ("s", "_SCLC"),
-	"SDMG": ("b", "_SDMG"),
-	"SBNC": ("b", "_SBNC"),
-	"SVIS": ("s", "_SVIS"),
-	"SAUD": ("s", "_SAUD"),
-	"STOU": ("f", "_STOU"),
-	"DACC": ("v", "_DACC"),
-	"AACC": ("s", "_AACC"),
-	"DDEC": ("v", "_DDEC"),
-	"SWAC": ("s", "_SWAC"),
-	"SFIL": ("s", "_SFIL"),
-	"SMMD": ("ff", "_SMMD"),
-	"SPRI": ("f", "_SPRI"),
-	"SUTR": ("s", "_SUTR"),
-	"SRDO": ("b", "_SRDO"),
-	"SSTR": ("b", "_SSTR"),
-	"SACT": ("b", "_SACT"),
-	"SLOP": ("b", "_SLOP"),
-	"SHMA": ("f", "_SHMA"),
-	"SHMR": ("f", "_SHMR"),
-	"SXEY": ("f", "_SXEY"),
-	"SMAS": ("f", "_SMAS"),
-	"SVCL": ("s", "_SVCL"),
-	"STYP": ("s", "_STYP"),
-	"SCLR": ("ffff", "_SCLR"),
-	"SSPR": ("b", "_SSPR"),
-	"SUCD": ("b", "_SUCD"),
-	"SUNM": ("b", "_SUNM"),
-	"SUCL": ("b", "_SUCL"),
-	"SUV0": ("b", "_SUV0"),
-	"SUV1": ("b", "_SUV1"),
-	"SUV2": ("b", "_SUV2"),
-	"SUV3": ("b", "_SUV3"),
-	"SFLN": ("s", "_SFLN"),
-	"STMS": ("fff", "_STMS"),
-	"SSDM": ("b", "_SSDM"),
-	"RXYZ": ("fff", "_RXYZ"),
-	"SCSH": ("b", "_SCSH"),
-	"SCSD": ("b", "_SCSD"),
-	"M_SH": ("b", "_M_SH"),
-	"SRMV": ("b", "_SRMV"),
-	"SPSD": ("b", "_SPSD"),
-	"STHC": ("b", "_STHC"),
-	"SVBL": ("b", "_SVBL"),
-	"SAFM": ("b", "_SAFM"),
-	"SAFU": ("b", "_SAFU"),
-	"SIQS": ("b", "_SIQS"),
-	"SFCA": ("b", "_SFCA"),
-	"SINS": ("b", "_SINS"),
-	"ENEM": ("b", "_ENEM"),
-	"SUEP": ("b", "_SUEP"),
-	"SSMD": ("b", "_SSMD"),
-	"SQSA": ("b", "_SQSA"),
-	"STHR": ("b", "_STHR"),
-	"CCML": ("v", "_CCML"),
-	"SSKM": ("s", "_SSKM"),
-	"SCSS": ("b", "_SCSS"),
-	"SSTC": ("s", "_SSTC"),
-	"SANF": ("s", "_SANF"),
-	"SACO": ("f", "_SACO"),
-	"SSTB": ("f", "_SSTB"),
-	"SUTE": ("s", "_SUTE"),
-	"ADTK": ("ffff", "_ADTK"),
-	"SETF": ("f", "setfloat"),
-
-
-	"SAMV": ("b", "_SAMV"),
-	"SART": ("b", "_SART"),
-	"IGNB": ("b", "_IGNB"),
-	"IGNS": ("b", "_IGNS"),
-	"IGNF": ("b", "_IGNF"),
-
-	"SPOS": ("fff", "_SPOS"),
-	"SDIR": ("fff", "_SDIR"),
-	"SEGY": ("f", "_SEGY"),
-	"SCTM": ("f", "_SCTM"),
-	"RTMD": ("f", "_RTMD"),
-	"SPOP": ("i", "_SPOP"),
-	"SAUE": ("f", "_SAUE"),
-	"SMCG": ("i", "_SMCG"),
-	"SCRG": ("i", "_SCRG"),
-	"SRTI": ("f", "_SRTI"),
-	"SHMC": ("fff", "_SHMC"),
-	"SRAC": ("f", "_SRAC"),
-
-
-
-	"SATT": ("fff", "?SATT"),
-	"SARM": ("si", "?SARM"),
-	"SDTP": ("s", "?SDTP"),
-	"SDBR": ("s", "?SDBR"),
-	"ADBR": ("sfffffff", "?ADBR"),
+		#'SK1F': ('iff', 'setkey1f'),
+		#'CNCT': ('s', 'connect'),
+	},
+	'nmeshnode': {
+		'SKEY': ('iffffff', 'setkey'),
+		'SFLN': ('s', 'setfilename'),
+		'SRDO': ('b', '_SRDO'),
+		'SCSD': ('b', '_SCSD'),
+	},
+	'nparticlesystem': {
+		'SLFT': ('f', 'setlifetime'),
+		'SFRQ': ('f', 'setfreq'),
+		'SSPD': ('f', 'setspeed'),
+		'SACC': ('fff', 'setaccel'),
+		'SICN': ('f', 'setinnercone'),
+		'SOCN': ('f', 'setoutercone'),
+		'SSPN': ('f', 'setspin'),
+		'SSPA': ('f', 'setspinaccel'),
+		#'SSTR' :
+		'SEMT': ('s', 'setemmiter'),
+	},
+	'njointanim': {
+		'BGJN': ('i', 'beginjoints'),
+		'EDJN': ('v', 'endjoints'),
+		'ADJN': ('isifffffff', 'addjoint'),
+		'BGST': ('i', 'beginstates'),
+		'ADST': ('is', 'addstate'),
+		'BGSA': ('ii', 'beginstateanims'),
+		'ADSA': ('iis', 'addstateanim'),
+		'EDSA': ('i', 'endstateanims'),
+		'EDST': ('v', 'endstates'),
+		'BGHP': ('i', 'beginhardpoints'),
+		'ADHP': ('iis', 'addhardpoint'),
+		'EDHP': ('v', 'endhardpoints'),
+	},
+	'nipol': {
+		'SK1F': ('iff', 'setkeys1f'),
+		'SK2F': ('ifff', 'setkeys2f'),
+		'SK3F': ('iffff', 'setkeys3f'),
+		'SK4F': ('ifffff', 'setkeys4f'),
+		'SRPT': ('s', 'setreptype'),
+		'SCHN': ('s', 'setchannel'),
+		'CNCT': ('s', 'connect'),
+		'SSCL': ('f', 'setscale'),
+		'BGKS': ('ii', 'beginkeys'),
+		'ENKS': ('v', 'endkeys'),
+		#'SIPT': 
+	},
+	'nchnmodulator': {
+		'BGIN': ('i', 'begin'),
+		'SET_': ('iss', 'set'),
+		'END_': ('v', 'end'),
+	},
+	'nhousemenu': {
+		'SMRD': ('f', '_SMRD'),
+		'STAD': ('f', '_STAD'),
+		'SISP': ('f', '_SISP'),
+		'SIDS': ('f', '_SIDS'),
+	},
+	'ncloud': {
+		'BCDS': ('if', '_BCDS'),
+		'SLNF': ('f', '_SLNF'),
+		'ECDS': ('v', 'enableclouds'),
+	},
+	'nmissileengine3': {
+		'SIDL': ('f', '_SIDL'),
+		'SGVF': ('f', '_SGVF'),
+		'SMXS': ('f', '_SMXS'),
+		'SAGL': ('f', '_SAGL'),
+	},
+	'nmeshcluster2': {
+		'SSMS': ('s', '_SSMS'),
+		'SCTS': ('b', '_SCTS'),
+		'SRTJ': ('s', '_SRTJ'),
+		'SRDO': ('b', '_SRDO'),
+	},
+	'ncurvearraynode': { #nipol
+		'BGCN': ('i', 'beginconnects'),
+		'EDCN': ('v', 'endconnects'),
+		'SCHN': ('s', 'setchannel'),
+		'SRPT': ('s', 'setreptype'),
+		'SSCL': ('f', 'setscale'),
+		'SFLN': ('s', 'setfilename'),
+		#EDBD
+		#SBC2
+		#BGBD
+		#BGCB
+		#SCBD
+		#EBCB
+		#SCC2
+	},
+	'nweighttree': {
+		'ANOD': ('sss', 'addnode'),
+		'ALEF': ('s', 'addleaf'),
+	},
+	'ncharacternode': { # njointanim, nchsplitter, nmeshnode
+		'EDSA': ('i', 'endstateanims'),
+		'BGHP': ('i', 'beginhardpoints'),
+		'BGSA': ('ii', 'beginstateanims'),
+		'BGJN': ('i', 'beginjoints'),
+		'SSKM': ('s', '_SSKM'),
+		'SRPT': ('s', 'setreptype'),
+		'EDHP': ('v', 'endhardpoints'),
+		'ADSA': ('iis', 'addstateanim'),
+		'SRDO': ('b', '_SRDO'),
+		'EDJN': ('v', 'endjoints'),
+		'ADJN': ('isifffffff', 'addjoint'),
+		'SCHN': ('s', 'setchannel'),
+		'SSCL': ('f', 'setscale'),
+		'ADHP': ('iis', 'addhardpoint'),
+		'SSTC': ('s', '_SSTC'),
+		'EDST': ('v', 'endstates'),
+		'SANF': ('s', '_SANF'),
+		'BGST': ('i', 'beginstates'),
+		'SCSS': ('b', '_SCSS'),
+		'ADST': ('is', 'addstate'),
+	},
+	'nanimsequence': {
+		'ADTK': ('ffff', '_ADTK'),
+		#ADQK
+		#STIT
+		#SVRL
+		#ADVK
+		#ADAK
+		#ADRK
+	},
+	'nmeshemitter': { # nparticlesystem
+		'SACC': ('fff', 'setaccel'),
+		'SOCN': ('f', 'setoutercone'),
+		'SCHN': ('s', 'setchannel'),
+		'SRPT': ('s', 'setreptype'),
+		'SICN': ('f', 'setinnercone'),
+		'SSCL': ('f', 'setscale'),
+		'SSPD': ('f', 'setspeed'),
+		'STMS': ('fff', '_STMS'),
+		'SMSN': ('s', '_SMSN'),
+		'SFRQ': ('f', 'setfreq'),
+		'SLFT': ('f', 'setlifetime'),
+	}
 }
 
-Classes = {}
-Stack = []
+GlobalFunctions = {	
+	'SRAD': ('f', 'setradius'),
+	'STGT': ('o', 'settarget'), #object
+	'SXYZ': ('fff', 'sxyz'),
+	'TXYZ': ('fff', 'txyz'),
+	'STXT': ('iss', 'settexture'), #TODO return bool
+	'SFAF': ('f', 'setfinishedafter'),
+
+	'SSHP': ('s', '_SSHP'),
+	'SCLC': ('s', '_SCLC'),
+	'SDMG': ('b', '_SDMG'),
+	'SBNC': ('b', '_SBNC'),
+	'SVIS': ('s', '_SVIS'),
+	'SAUD': ('s', '_SAUD'),
+	'STOU': ('f', '_STOU'),
+	'DACC': ('v', '_DACC'),
+	'AACC': ('s', '_AACC'),
+	'DDEC': ('v', '_DDEC'),
+	'SWAC': ('s', '_SWAC'),
+	'SFIL': ('s', '_SFIL'),
+	'SMMD': ('ff', '_SMMD'),
+	'SPRI': ('f', '_SPRI'),
+	'SUTR': ('s', '_SUTR'),
+	'SSTR': ('b', '_SSTR'),
+	'SACT': ('b', '_SACT'),
+	'SLOP': ('b', '_SLOP'),
+	'SHMA': ('f', '_SHMA'),
+	'SHMR': ('f', '_SHMR'),
+	'SXEY': ('f', '_SXEY'),
+	'SMAS': ('f', '_SMAS'),
+	'SVCL': ('s', '_SVCL'),
+	'STYP': ('s', '_STYP'),
+	'SCLR': ('ffff', '_SCLR'),
+	'SSPR': ('b', '_SSPR'),
+	'SUCD': ('b', '_SUCD'),
+	'SUNM': ('b', '_SUNM'),
+	'SUCL': ('b', '_SUCL'),
+	'SUV0': ('b', '_SUV0'),
+	'SUV1': ('b', '_SUV1'),
+	'SUV2': ('b', '_SUV2'),
+	'SUV3': ('b', '_SUV3'),
+	'SSDM': ('b', '_SSDM'),
+	'RXYZ': ('fff', '_RXYZ'),
+	'SCSH': ('b', '_SCSH'),
+	'M_SH': ('b', '_M_SH'),
+	'SRMV': ('b', '_SRMV'),
+	'SPSD': ('b', '_SPSD'),
+	'STHC': ('b', '_STHC'),
+	'SVBL': ('b', '_SVBL'),
+	'SAFM': ('b', '_SAFM'),
+	'SAFU': ('b', '_SAFU'),
+	'SIQS': ('b', '_SIQS'),
+	'SFCA': ('b', '_SFCA'),
+	'SINS': ('b', '_SINS'),
+	'ENEM': ('b', '_ENEM'),
+	'SUEP': ('b', '_SUEP'),
+	'SSMD': ('b', '_SSMD'),
+	'SQSA': ('b', '_SQSA'),
+	'STHR': ('b', '_STHR'),
+	'CCML': ('v', '_CCML'),
+	'SACO': ('f', '_SACO'),
+	'SSTB': ('f', '_SSTB'),
+	'SUTE': ('s', '_SUTE'),
+	'SETF': ('f', 'setfloat'),
+
+	'SAMV': ('b', '_SAMV'),
+	'SART': ('b', '_SART'),
+	'IGNB': ('b', '_IGNB'),
+	'IGNS': ('b', '_IGNS'),
+	'IGNF': ('b', '_IGNF'),
+
+	'SPOS': ('fff', '_SPOS'),
+	'SDIR': ('fff', '_SDIR'),
+	'SEGY': ('f', '_SEGY'),
+	'SCTM': ('f', '_SCTM'),
+	'RTMD': ('f', '_RTMD'),
+	'SPOP': ('i', '_SPOP'),
+	'SAUE': ('f', '_SAUE'),
+	'SMCG': ('i', '_SMCG'),
+	'SCRG': ('i', '_SCRG'),
+	'SRTI': ('f', '_SRTI'),
+	'SHMC': ('fff', '_SHMC'),
+	'SRAC': ('f', '_SRAC'),
+
+	'SATT': ('fff', '?SATT'),
+	'SARM': ('si', '?SARM'),
+	'SDTP': ('s', '?SDTP'),
+	'SDBR': ('s', '?SDBR'),
+	'ADBR': ('sfffffff', '?ADBR')
+}
+
+Classes_A = {}
+Stack = [("", "GLOBAL")]
 
 def executeOperator(name, args):
 	if name == "new":
@@ -287,13 +350,13 @@ def executeFunction(name, args):
 	if len(Stack) == 0:
 		Stack.append("GLOBAL")
 	c = Stack[-1][0]
-	if c not in Classes:
-		Classes[c] = set()
-	Classes[c].add(name)
+	if c not in Classes_A:
+		Classes_A[c] = set()
+	Classes_A[c].add(name)
 
 def printClasses():
 	f = open("classes.txt", "w")
-	for pair in Classes.iteritems():
+	for pair in Classes_A.iteritems():
 		f.write("{}\n".format(pair[0]))
 		for m in pair[1]:
 			f.write("    {}\n".format(m))
@@ -315,7 +378,10 @@ def parseTag(tag, f):
 		if not ANALYZE_ONLY: 
 			print("{} {};".format(name, result))
 	else:
+		Functions = GlobalFunctions
 		(tp, obj) = Stack[-1]
+		if tp in Classes:
+			Functions = Classes[tp]
 		shouldRead = not ANALYZE_ONLY or tag == TARGET_TAG
 		if tag in Functions:
 			(code, name) = Functions[tag]
@@ -347,8 +413,8 @@ def parseTag(tag, f):
 	#print("0x{:0x}: {} {}".format(pos, name, result))
 
 def readTag(f):
-	tag = struct.unpack("4c", f.read(4))
-	tag = "".join(tag)[::-1]
+	(tag,) = struct.unpack("4s", f.read(4))
+	tag = str(tag[::-1].decode("utf-8"))
 	pos = f.tell()
 	parseTag(tag, f)
 	try:

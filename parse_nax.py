@@ -1,7 +1,7 @@
 import struct, os
 
 USE_DEVELOPEMENT_FOLDER = True
-VERBOSITY = 2
+VERBOSITY = 1
 
 if USE_DEVELOPEMENT_FOLDER:
 	PATH = "nvx/character.nax"
@@ -19,7 +19,7 @@ KEY_VANILLA = 0
 KEY_PACKED = 1
 
 def ltof(float16):
-	mult = 1.0 / 32767.5
+	mult = 2.0 / float(0b1111111111111111)
 	result = float(float16) * mult - 1.0
 	return result
 def readByte(f):
@@ -59,8 +59,6 @@ class Curve:
 	Rep = None
 	KeyType = None
 	Data = None
-
-	stream = None
 
 	def __init__(self, f):
 		self.stream = f
@@ -121,9 +119,10 @@ class Curve:
 		interp = IntepolationTypes[self.Interp]
 		rep = RepeatTypes[self.Rep]
 		key = KeyTypes[self.KeyType]
-		result.append('Name: {}, Interpolation: {}, Repeat: {}, Type: {}'.format(self.Name, interp, rep, key))
-		for d in self.Data:
-			result.append('  ({:6.3f}, {:6.3f}, {:6.3f}, {:6.3f})'.format(d[0], d[1], d[2], d[3]))
+		result.append('Name: {}, Interpolation: {}, Repeat: {}, Type: {}, Num: {}'.format(self.Name, interp, rep, key, len(self.Data)))
+		if VERBOSITY > 1:
+			for d in self.Data:
+				result.append('  ({:6.3f}, {:6.3f}, {:6.3f}, {:6.3f})'.format(d[0], d[1], d[2], d[3]))
 		return '\n'.join(result)
 
 def readHeader(f):
@@ -156,7 +155,7 @@ def convertFile(name):
 		print("Parsing error {}".format(e))
 	f.close()
 
-	if VERBOSITY > 1:
+	if VERBOSITY > 0:
 		for c in curves:
 			print(str(c))
 
