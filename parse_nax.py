@@ -1,7 +1,7 @@
 import struct, os
 
 USE_DEVELOPEMENT_FOLDER = True
-VERBOSITY = 0
+VERBOSITY = 2
 
 if USE_DEVELOPEMENT_FOLDER:
 	PATH = "nvx/character.nax"
@@ -19,29 +19,9 @@ KEY_VANILLA = 0
 KEY_PACKED = 1
 
 def ltof(float16):
-	MASK = int(0b1111111111111111)
-	result = 0
-	C1 = 15
-	C2 = 10
-	M2 = MASK >> (15-C2)
-	s = int((float16 >> C1) & 0b00001)	# sign
-	e = int((float16 >> 11) & 0b01111)	# exponent
-	m = int(float16 & 0b11111111111)		# mantis
-	sign = 1.0
-	if s: sign = -1.0
-	if e == 0:
-		if m == 0:
-			result = 0.0
-		else:
-			result = sign * 2.0**(-13) * (m / 2048.0)
-	else:
-		result = sign * 2.0**(e-14) * (1.0 + m / 2048.0) 
-	#print(bin(s), bin(e), bin(m))
-	#print(s,e,m)
-	#print float16, float(result)
-	print("{:1b} {:04b} {:011b}".format(s, e, m))
+	mult = 1.0 / 32767.5
+	result = float(float16) * mult - 1.0
 	return result
-
 def readByte(f):
 	(value, ) = struct.unpack("<b", f.read(1))
 	return value
@@ -110,6 +90,8 @@ class Curve:
 		self.KeyType = readByte(self.stream)
 		readByte(self.stream) # padding
 		self.Name = readString(self.stream)
+		IntepolationTypes = ["Step", "Linear", "Quaternion"]
+		interp = IntepolationTypes[self.Interp]
 
 	def readCurveDataVanilla(self):
 		footprint = readInt(self.stream)
@@ -141,7 +123,7 @@ class Curve:
 		key = KeyTypes[self.KeyType]
 		result.append('Name: {}, Interpolation: {}, Repeat: {}, Type: {}'.format(self.Name, interp, rep, key))
 		for d in self.Data:
-			result.append('  ({:5.3}, {:5.3}, {:5.3}, {:5.3})'.format(d[0], d[1], d[2], d[3]))
+			result.append('  ({:6.3f}, {:6.3f}, {:6.3f}, {:6.3f})'.format(d[0], d[1], d[2], d[3]))
 		return '\n'.join(result)
 
 def readHeader(f):

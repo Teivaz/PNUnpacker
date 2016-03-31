@@ -1,11 +1,11 @@
 import struct, os
 
-USE_DEVELOPEMENT_FOLDER = False
-ANALYZE_ONLY = True
+USE_DEVELOPEMENT_FOLDER = True
+ANALYZE_ONLY = False
 TARGET_TAG = "BGCN"
 
 if USE_DEVELOPEMENT_FOLDER:
-	PATH = "_main.n"
+	PATH = "../nvx/_main.n"
 else:
 	PATH = "_data.npk"
 
@@ -54,10 +54,10 @@ def readNBytes(f, size):
 	return "{}".format(data)
 
 def readBytes(f):
-	(size, ) = struct.unpack("<h", f.read(2))
-	strSize = peekShortI(f)
-	if strSize+2 == size:
-		return readString(f)
+	#(size, ) = struct.unpack("<h", f.read(2))
+	#strSize = peekShortI(f)
+	#if strSize+2 == size:
+	#	return readString(f)
 	format = "{}b".format(size)
 	data = struct.unpack(format, f.read(size))
 	return "{}".format(data)
@@ -103,7 +103,7 @@ Functions = {
 	"STXT": ("iss", "settexture"), #TODO return bool
 	"SFAF": ("f", "setfinishedafter"),
 	"SRPT": ("s", "setreptype"),
-	"SKEY": ("iffffff", "setkey"),
+	"SKEY": ("ifs", "setkey"),
 	"BKEY": ("i", "beginkeys"),
 	"EKEY": ("v", "endkeys"),
 	"SSCL": ("f", "setscale"),
@@ -127,15 +127,26 @@ Functions = {
 	"ADJN": ("isifffffff", "addjoint"),
 	"BGST": ("i", "beginstates"),
 	"ADST": ("is", "addstate"),
-	"BGSA": ("ii", "_BGSA"),
-	"ADSA": ("iis", "_ADSA"),
-	"EDSA": ("i", "_EDSA"),
+	"BGSA": ("ii", "beginstateanims"),
+	"ADSA": ("iis", "addstateanim"),
+	"EDSA": ("i", "endstateanims"),
 	"EDST": ("v", "endstates"),
+	"BGHP": ("i", "beginhardpoints"),
+	"ADHP": ("iis", "addhardpoint"),
+	"EDHP": ("v", "endhardpoints"),
 
 	#nchnsplitter
 	"BGKS": ("ii", "beginkeys"),
 	"SK3F": ("iffff", "keys"),
 	"ENKS": ("v", "endkeys"),
+
+	#nipol
+	"SK1F": ("iff", "setkey1f"),
+
+	#nchnmodulator
+	"BGIN": ("i", "begin"),
+	"SET_": ("iss", "set"),
+	"END_": ("v", "end"),
 
 	#nhousemenu
 	"SMRD": ("f", "_SMRD"),
@@ -162,6 +173,10 @@ Functions = {
 	#ncurvearraynode
 	"BGCN": ("i", "beginconnects"),
 	"EDCN": ("v", "endconnects"),
+
+	#nweighttree
+	"ANOD": ("sss", "addnode"),
+	"ALEF": ("s", "addleaf"),
 
 	"SMSN": ("s", "_SMSN"),
 	"SSHP": ("s", "_SSHP"),
@@ -227,6 +242,8 @@ Functions = {
 	"SACO": ("f", "_SACO"),
 	"SSTB": ("f", "_SSTB"),
 	"SUTE": ("s", "_SUTE"),
+	"ADTK": ("ffff", "_ADTK"),
+	"SETF": ("f", "setfloat"),
 
 
 	"SAMV": ("b", "_SAMV"),
