@@ -1,7 +1,7 @@
 import struct, os
 
 USE_DEVELOPEMENT_FOLDER = True
-VERBOSITY = 1
+VERBOSITY = 2
 
 if USE_DEVELOPEMENT_FOLDER:
 	PATH = "nvx/character.nax"
@@ -60,6 +60,11 @@ class Curve:
 	KeyType = None
 	Data = None
 
+	State = None
+	Anim = None
+	Channel = None
+	Bone = None
+
 	def __init__(self, f):
 		self.stream = f
 
@@ -88,6 +93,11 @@ class Curve:
 		self.KeyType = readByte(self.stream)
 		readByte(self.stream) # padding
 		self.Name = readString(self.stream)
+		nameSplit = self.Name.split('_')
+		self.State = nameSplit[0]
+		self.Anim = nameSplit[1]
+		self.Channel = nameSplit[2]
+		self.Bone = nameSplit[-1]
 		IntepolationTypes = ["Step", "Linear", "Quaternion"]
 		interp = IntepolationTypes[self.Interp]
 
@@ -99,7 +109,7 @@ class Curve:
 		streamStart = self.stream.tell()
 		streamEnd = streamStart + size
 		while self.stream.tell() != streamEnd:
-			self.Data.append((readFloat(self.stream),readFloat(self.stream),readFloat(self.stream),readFloat(self.stream)))
+			self.Data.append((readInt(self.stream),readFloat(self.stream),readFloat(self.stream),readFloat(self.stream)))
 
 	def readCurveDataPacked(self):
 		footprint = readInt(self.stream)
@@ -109,7 +119,7 @@ class Curve:
 		streamStart = self.stream.tell()
 		streamEnd = streamStart + size
 		while self.stream.tell() != streamEnd:
-			self.Data.append((readHFloat(self.stream),readHFloat(self.stream),readHFloat(self.stream),readHFloat(self.stream)))
+			self.Data.append((readShort(self.stream),readHFloat(self.stream),readHFloat(self.stream),readHFloat(self.stream)))
 
 	def __str__(self):
 		result = []
@@ -119,7 +129,7 @@ class Curve:
 		interp = IntepolationTypes[self.Interp]
 		rep = RepeatTypes[self.Rep]
 		key = KeyTypes[self.KeyType]
-		result.append('Name: {}, Interpolation: {}, Repeat: {}, Type: {}, Num: {}'.format(self.Name, interp, rep, key, len(self.Data)))
+		result.append('State: {}, Anim: {}, Channel: {}, Bone: {}, Interpolation: {}, Repeat: {}, Type: {}, KPS: {}, Num: {}'.format(self.State, self.Anim, self.Channel, self.Bone, interp, rep, key, self.KeysPerSecond, len(self.Data)))
 		if VERBOSITY > 1:
 			for d in self.Data:
 				result.append('  ({:6.3f}, {:6.3f}, {:6.3f}, {:6.3f})'.format(d[0], d[1], d[2], d[3]))

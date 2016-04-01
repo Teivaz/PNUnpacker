@@ -391,6 +391,14 @@ def parseTag(tag, f):
 			else:
 				result = ""
 			executeFunction(name, result)
+		elif tag in GlobalFunctions:
+			(code, name) = Functions[tag]
+			tagSize = readShortI(f)
+			if shouldRead: 
+				result = readArgs(f, code)
+			else:
+				result = ""
+			executeFunction(name, result)
 		else:
 			tagSize = peekShortI(f)
 			name = "#" + name

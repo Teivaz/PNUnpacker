@@ -38,6 +38,8 @@ if "bpy" in locals():
         importlib.reload(import_nvx)
     if "import_n" in locals():
         importlib.reload(import_n)
+    if "import_nax" in locals():
+        importlib.reload(import_nax)
 else:
     import bpy
 
@@ -86,9 +88,31 @@ class NImporter(bpy.types.Operator):
         wm.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+class NaxImporter(bpy.types.Operator):
+    """Load NAX triangle mesh data"""
+    bl_idname = "import_anim.nax"
+    bl_label = "Import NAX"
+    bl_options = {'UNDO'}
+
+    filepath = StringProperty(
+            subtype='FILE_PATH',
+            )
+    filter_glob = StringProperty(default="*.nax", options={'HIDDEN'})
+
+    def execute(self, context):
+        from . import import_nax
+        import_nax.read(self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
 def menu_import(self, context):
     self.layout.operator(NvxImporter.bl_idname, text="Nebula mesh (.nvx)")
     self.layout.operator(NImporter.bl_idname, text="Nebula script (.n)")
+    self.layout.operator(NaxImporter.bl_idname, text="Nebula mesh (.nax)")
 
 def register():
     bpy.utils.register_module(__name__)
