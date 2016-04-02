@@ -45,23 +45,6 @@ MESH_HAS_UV2 =   0b00100000 # has UV2
 MESH_HAS_UV3 =   0b01000000 # has UV3
 MESH_HAS_LINKS=  0b10000000 # has joint indices for skinning and weights
 
-class Mesh(object):
-    Format = 0
-    Positions = [] # [ (x, y, z), (x, y, z) ]
-    Normals = [] # [ (x, y, z), (x, y, z) ]
-    Colors = [] # [c, c, c]
-    UV0 = [] # [ (u, v), (u, v) ]
-    UV1 = [] # [ (u, v), (u, v) ]
-    UV2 = [] # [ (u, v), (u, v) ]
-    UV3 = [] # [ (u, v), (u, v) ]
-    Groups = [] # [ ( (ia, ib, ic, id), (wa, wb, wc, wd) ), ... ]
-    WingedEdges = [] # [ (a, b, c, d), (a, b, c, d) ]
-    Indices = [] # [ (a, b, c), (a, b, c) ]
-    NumVerts = 0
-    NumWingedEdges = 0
-    NumIndices = 0
-    DataSize = 0
-
 def readInt(f):
     (r, ) = struct.unpack("<I", f.read(4))
     return r
@@ -72,92 +55,108 @@ def readFloat(f):
     (r, ) = struct.unpack("<f", f.read(4))
     return r
 
-def parseVerticesFormat(f, mesh):
-    for i in range(mesh.NumVerts):
-        if mesh.Format & MESH_HAS_POS:
-            v = struct.unpack("<fff", f.read(12))
-            mesh.Positions.append(v)
-        if mesh.Format & MESH_HAS_NORM:
-            v = struct.unpack("<fff", f.read(12))
-            mesh.Normals.append(v)
-        if mesh.Format & MESH_HAS_COLOR:
-            (v,) = struct.unpack("<I", f.read(4))
-            mesh.Colors.append(v)
-        if mesh.Format & MESH_HAS_UV0:
-            v = struct.unpack("<ff", f.read(8))
-            mesh.UV0.append(v)
-        if mesh.Format & MESH_HAS_UV1:
-            v = struct.unpack("<ff", f.read(8))
-            mesh.UV1.append(v)
-        if mesh.Format & MESH_HAS_UV2:
-            v = struct.unpack("<ff", f.read(8))
-            mesh.UV2.append(v)
-        if mesh.Format & MESH_HAS_UV3:
-            v = struct.unpack("<ff", f.read(8))
-            mesh.UV3.append(v)
-        if mesh.Format & MESH_HAS_LINKS:
-            a = struct.unpack("<hhhh", f.read(8))
-            v = struct.unpack("<ffff", f.read(16))
-            mesh.Groups.append((a, v))
-    return mesh
+class Mesh(object):
+    Format = None
+    Positions = None # [ (x, y, z), (x, y, z) ]
+    Normals = None # [ (x, y, z), (x, y, z) ]
+    Colors = None # [c, c, c]
+    UV0 = None # [ (u, v), (u, v) ]
+    UV1 = None # [ (u, v), (u, v) ]
+    UV2 = None # [ (u, v), (u, v) ]
+    UV3 = None # [ (u, v), (u, v) ]
+    Groups = None # [ ( (ia, ib, ic, id), (wa, wb, wc, wd) ), ... ]
+    WingedEdges = None # [ (a, b, c, d), (a, b, c, d) ]
+    Indices = None # [ (a, b, c), (a, b, c) ]
+    NumVerts = None
+    NumWingedEdges = None
+    NumIndices = None
+    DataSize = None
+
+    def __init__(self, f):
+        self.Positions = [] # [ (x, y, z), (x, y, z) ]
+        self.Normals = [] # [ (x, y, z), (x, y, z) ]
+        self.Colors = [] # [c, c, c]
+        self.UV0 = [] # [ (u, v), (u, v) ]
+        self.UV1 = [] # [ (u, v), (u, v) ]
+        self.UV2 = [] # [ (u, v), (u, v) ]
+        self.UV3 = [] # [ (u, v), (u, v) ]
+        self.Groups = [] # [ ( (ia, ib, ic, id), (wa, wb, wc, wd) ), ... ]
+        self.WingedEdges = [] # [ (a, b, c, d), (a, b, c, d) ]
+        self.Indices = [] # [ (a, b, c), (a, b, c) ]
+        self.NumVerts = readInt(f)
+        self.NumIndices = readInt(f)
+        self.NumWingedEdges = readInt(f)
+        self.Format = readInt(f)
+        DataOffset = readInt(f)
+        self.DataSize = readInt(f)
+        f.seek(DataOffset)
+
+
+    def parseVerticesFormat(self, f):
+        for i in range(self.NumVerts):
+            if self.Format & MESH_HAS_POS:
+                v = struct.unpack("<fff", f.read(12))
+                self.Positions.append(v)
+            if self.Format & MESH_HAS_NORM:
+                v = struct.unpack("<fff", f.read(12))
+                self.Normals.append(v)
+            if self.Format & MESH_HAS_COLOR:
+                (v,) = struct.unpack("<I", f.read(4))
+                self.Colors.append(v)
+            if self.Format & MESH_HAS_UV0:
+                v = struct.unpack("<ff", f.read(8))
+                self.UV0.append(v)
+            if self.Format & MESH_HAS_UV1:
+                v = struct.unpack("<ff", f.read(8))
+                self.UV1.append(v)
+            if self.Format & MESH_HAS_UV2:
+                v = struct.unpack("<ff", f.read(8))
+                self.UV2.append(v)
+            if self.Format & MESH_HAS_UV3:
+                v = struct.unpack("<ff", f.read(8))
+                self.UV3.append(v)
+            if self.Format & MESH_HAS_LINKS:
+                a = struct.unpack("<hhhh", f.read(8))
+                v = struct.unpack("<ffff", f.read(16))
+                self.Groups.append((a, v))
         
-def parseIndexArray(f, mesh):
-    Indices = mesh.Indices
-    for i in range(mesh.NumIndices):
-        tell = f.tell()
-        index = readShort(f)
-        Indices.append(index)
-    return mesh
+    def parseIndexArray(self, f):
+        for i in range(self.NumIndices):
+            tell = f.tell()
+            index = readShort(f)
+            self.Indices.append(index)
 
-def indicesToTriangles(f, mesh):
-    indices = mesh.Indices
-    triangles = int(mesh.NumIndices / 3)
-    result = []
-    for i in range(triangles):
-        index = (indices[i*3+0], indices[i*3+1], indices[i*3+2])
-        result.append(index)
-    mesh.Indices = result
-    return mesh
+    def indicesToTriangles(self, f):
+        indices = self.Indices
+        triangles = int(self.NumIndices / 3)
+        result = []
+        for i in range(triangles):
+            index = (indices[i*3+0], indices[i*3+1], indices[i*3+2])
+            result.append(index)
+        self.Indices = result
 
-def indicesToTriangleStrip(f, mesh):
-    indices = mesh.Indices
-    triangles = int((mesh.NumIndices-1) / 2)
-    result = []
-    for i in range(triangles):
-        index = (indices[i*2+0], indices[i*2+1], indices[i*2+2])
-        result.append(index)
-    mesh.Indices = result
-    return mesh
-
-def parseQuads(f, mesh):
-    result = mesh.WingedEdges
-    for i in range(mesh.NumWingedEdges):
-        quad = struct.unpack("<HHHH", f.read(4*2))
-        quad = (quad[0], quad[1], quad[2], quad[3])
-        result.append(quad)
-    mesh.WingedEdges = result
-    return mesh
+    def parseQuads(self, f):
+        result = self.WingedEdges
+        for i in range(self.NumWingedEdges):
+            quad = struct.unpack("<HHHH", f.read(4*2))
+            quad = (quad[0], quad[1], quad[2], quad[3])
+            result.append(quad)
+        self.WingedEdges = result
 
 def convert(f):
     footprint = readInt(f)
     if 0x4e565831 != footprint:
         raise NameError("File is not recognized as .NVX")
-    mesh = Mesh()
-    mesh.NumVerts = readInt(f)
-    mesh.NumIndices = readInt(f)
-    mesh.NumWingedEdges = readInt(f)
-    Format = readInt(f)
-    DataOffset = readInt(f)
-    mesh.DataSize = readInt(f)
-    mesh.Format = Format
-    f.seek(DataOffset)
-    mesh = parseVerticesFormat(f, mesh)
-    mesh = parseQuads(f, mesh)
-    mesh = parseIndexArray(f, mesh)
-    mesh = indicesToTriangles(f, mesh)
+    mesh = Mesh(f)
+    mesh.parseVerticesFormat(f)
+    mesh.parseQuads(f)
+    mesh.parseIndexArray(f)
+    mesh.indicesToTriangles(f)
     return mesh
 
 def assignGroups(mesh, obj):
+    if len(mesh.Groups) == 0:
+        return
     linkGroups = {}
     for i in range(mesh.NumVerts):
         (groups, weights) = mesh.Groups[i]
