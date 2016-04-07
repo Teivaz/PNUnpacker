@@ -180,7 +180,8 @@ def addMesh(filename, objName):
     filehandle.close()
     m = bpy.data.meshes.new(objName)
     m.from_pydata(mesh.Positions, [], mesh.Indices)
-    m.normals_split_custom_set_from_vertices(mesh.Normals)
+    if len(mesh.Normals) > 0:
+        m.normals_split_custom_set_from_vertices(mesh.Normals)
 
     hasUV = len(mesh.UV0) > 0
     if hasUV:

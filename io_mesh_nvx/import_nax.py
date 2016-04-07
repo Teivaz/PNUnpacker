@@ -189,7 +189,7 @@ def addAnimation(ob, anim):
             for i in range(len(data)):
                 d = data[i]
                 bone.rotation_mode = 'QUATERNION'
-                bone.rotation_quaternion = (d[3], d[0], -d[1], d[2])
+                bone.rotation_quaternion = (d[3], d[0], d[1], d[2])
                 bone.keyframe_insert('rotation_quaternion', frame=i)
 
 def addAnimations(filename, objName):

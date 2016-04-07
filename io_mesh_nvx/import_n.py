@@ -90,7 +90,7 @@ def isOperator(tag):
 Bones = []
 def addBone(params):
     (index, name, parentIndex, x, y, z,  a, b, c, d) = params
-    Bones.append( (index, name, parentIndex, (x, y, z), (d, a, -b, c)) )
+    Bones.append( (index, name, parentIndex, (x, y, z), (d, a, b, c)) )
 
 def parseTag(tag, f):
     pos = f.tell()
@@ -136,7 +136,7 @@ def convertFile(name):
     return Bones
 
 def createBones(bones, name):
-    direction = Vector((0,0,-0.1))
+    direction = Vector((.01, .01,.01))
     origin = (0,0,0)
     bpy.ops.object.add(
         type='ARMATURE', 
@@ -149,24 +149,25 @@ def createBones(bones, name):
     amt.name = name+'Amt'
     amt.show_axes = True
     bpy.ops.object.mode_set(mode='EDIT')
-    for (idx, name, pidx, pos, quat) in bones:
+    for (idx, name, pidx, pos, rot_) in bones:
+        rot = Quaternion(rot_)
         bone = amt.edit_bones.new(str(idx))
+        bone.head = Vector(origin)
+        bone.tail = direction
+        m = Matrix()
         if pidx != -1:
             pname = bones[pidx][1]
             parent = amt.edit_bones[str(pidx)]
             bone.parent = parent
-            bone.use_connect = False
-
-            (trans, rot, scale) = parent.matrix.decompose()
-
-            bone.head = parent.head + Vector(pos)
-            q = Quaternion(quat) * rot
-            bone.tail = q * direction + bone.head
-
+            P = parent.matrix
+            R = rot.to_matrix().to_4x4()
+            T = Matrix().Translation(pos)
+            m = P * T * R
         else:
-            bone.head = Vector(pos)
-            q = Quaternion(quat)
-            bone.tail = q * direction + bone.head
+            R = rot.to_matrix().to_4x4()
+            T = Matrix().Translation(pos)
+            m = T * R
+        bone.matrix = m
 
     bpy.ops.object.mode_set(mode='OBJECT')
     return ob
