@@ -31,8 +31,8 @@ Notes:
 Generates animation sequences.
 """
 
-
 import bpy, bmesh, struct
+from mathutils import Quaternion
 
 INTERP_STEP = 0
 INTERP_LINEAR = 1
@@ -175,22 +175,35 @@ def convert(f):
     return Animations
     #return curves
 
-def addAnimation(ob, anim):
+gLastFrame = 0
+def addAnimation(ob, anim, name):
+    action = bpy.data.actions.new(name)
+    ob.animation_data.action = action
+    global gLastFrame
+    lastFrame = 0
     for b in anim.items():
         bn, state = b
         bone = ob.pose.bones[bn]
         channel, data = state
+        bone.bone.use_inherit_rotation = 1
+        bone.bone.use_local_location = 1
+        bone.bone.use_inherit_scale = 0
         if channel == 'trans':
             for i in range(len(data)):
                 d = data[i]
                 bone.location = (d[0], d[1], d[2])
-                bone.keyframe_insert('location', frame=i)
+                bone.keyframe_insert('location', frame=gLastFrame+i)
         elif channel == 'rot':
             for i in range(len(data)):
                 d = data[i]
                 bone.rotation_mode = 'QUATERNION'
-                bone.rotation_quaternion = (d[3], d[0], d[1], d[2])
-                bone.keyframe_insert('rotation_quaternion', frame=i)
+                (loc, rot, scale) = bone.bone.matrix.to_4x4().decompose()
+                rotation = Quaternion((d[3], -d[0], -d[1], -d[2]))
+                rotation = rot*rotation
+                bone.rotation_quaternion = rotation
+                bone.keyframe_insert('rotation_quaternion', frame=gLastFrame+i)
+        lastFrame = max(lastFrame, len(data))
+    #gLastFrame = lastFrame + gLastFrame
 
 def addAnimations(filename, objName):
     filehandle = open(filename, "rb")
@@ -201,7 +214,11 @@ def addAnimations(filename, objName):
     bpy.context.scene.objects.active = amt
     bpy.ops.object.mode_set(mode='POSE')
 
-    addAnimation(amt, anims['fliegen_slow'])
+    #print(anims.keys())
+    #addAnimation(amt, anims[anims.keys()[0]])
+    amt.animation_data_create()
+    for k, v in anims.items():
+        addAnimation(amt, v, k)
 
 
 def read(filepath):
@@ -210,5 +227,5 @@ def read(filepath):
     addAnimations(filepath, objName)
 
 
-path = r'd:\projects\islander_old\PNUnpacker\nvx\character.nax'
-#read(path)
+path = r'e:\other\islander_old\PNUnpacker\nvx\character.nax'
+read(path)
