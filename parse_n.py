@@ -1,22 +1,54 @@
-import struct, os
+import struct, os, unicodedata
 
-USE_DEVELOPEMENT_FOLDER = True
-ANALYZE_ONLY = False
-TARGET_TAG = "BGCN"
+USE_DEVELOPEMENT_FOLDER = False
+ANALYZE_ONLY = True
 
 if USE_DEVELOPEMENT_FOLDER:
-	PATH = "../nvx/_main.n"
+	PATH = "nvx/_main.n"
 else:
-	PATH = "_data.npk"
+	PATH = "../islander/islander_old/_data.npk"
 
 def peek(f, length=1):
-    pos = f.tell()
-    data = f.read(length) # Might try/except this line, and finally: f.seek(pos)
-    f.seek(pos)
-    return data
-
+	pos = f.tell()
+	data = f.read(length) # Might try/except this line, and finally: f.seek(pos)
+	f.seek(pos)
+	return data
 
 ######################
+class Tag:
+	# tag - what we read from file
+	# name - fuction name
+	# tp - class of the object
+	# known - function is in the list of functions
+	# code - function arguments
+	# obj - the name of the instance
+	# tagSize - size of the arguments
+	def __init__(self, tag, name, tp, known, code, obj, tagSize):
+		self.tag = tag
+		self.func = name
+		self.className = tp
+		self.known = known
+		self.args = code
+		self.object = obj
+		self.size = tagSize
+
+	def shouldRead(self):
+		if not ANALYZE_ONLY:
+			return True
+		#return not self.known
+		#return self.tag == "QXYZ"
+		#return self.tag == "SATM" and self.className == "nairplane3"
+		return self.tag == 'SMPR'
+
+	def submit(self, result):
+		if not self.shouldRead():
+			return
+		if ANALYZE_ONLY:
+			print("{}::{}\t{}".format(self.className, self.tag, result))
+		else:
+			print("{}{}.{}::{}({});".format(depthTab(), self.object, self.className, self.func, result))
+
+
 def isValid(f):
 	(footprint, ) = struct.unpack("<I", f.read(4))
 	return footprint == 0x4e4f4230 #NOB0
@@ -41,7 +73,8 @@ def readString(f):
 	size = readShortI(f)
 	format = "{}s".format(size)
 	(string,) = struct.unpack(format, f.read(size))
-	return string.decode("utf-8")
+	string.decode(encoding="latin-1", errors="replace")
+	return string
 
 def readVoid(f):
 	return ""
@@ -81,8 +114,11 @@ def op_sel(f):
 
 def readArgs(f, code):
 	result = []
-	for c in code:
-		v = Arguments[c](f)
+	for i, c in enumerate(code):
+		try:
+			v = Arguments[c](f)
+		except:
+			raise NameError("Failed parsing argument {} of type `{}`".format(i, c))
 		result.append(v)
 	return ", ".join(result)
 
@@ -94,19 +130,47 @@ Operators = {
 
 
 Classes = {
+	'n3dnode': {
+		'QXYZ': ('ffff', '_QXYZ'),
+		'SBLB': ('b', '_SBLB'),
+		'SHDT': ('b', '_SHDT'),
+		'SLVW': ('b', '_SLVW'),
+		'SMLD': ('f', '_SMLD'),
+		'SVWS': ('b', '_SVWS'),
+		'RXYZ': ('fff', 'rotate_xyz'),
+		'SACT': ('b', '_SACT'),
+		'SFAF': ('f', 'setfinishedafter'),
+		'SSPR': ('b', '_SSPR'),
+		'SXYZ': ('fff', 'scale_xyz'),
+		'TXYZ': ('fff', 'translate_xyz'),
+	},
+	'nflipflop': {
+		'SRPT': ('s', 'setreptype'),
+		'SCHN': ('s', 'setchannel'),
+		'SSCL': ('f', 'setscale'),
+		'AKEY': ('fs', 'add_key'),
+	},
+	'nmeshipol': {
+		'SKEY': ('ifs', 'setkey'),
+		'BKEY': ('i', 'beginkeys'),
+		'EKEY': ('v', 'endkeys'),
+		'SCHN': ('s', 'setchannel'),
+		'SRDO': ('b', '_SRDO'),
+		'SRPT': ('s', 'setreptype'),
+		'SSCL': ('f', 'setscale'),
+		'SUCD': ('b', '_SUCD'),
+		'SUCL': ('b', '_SUCL'),
+	},
 	'nchnsplitter': {
+		'BKEY': ('i', 'beginkeys'),
+		'EKEY': ('v', 'endkeys'),
+		'SCHN': ('s', 'setchannel'),
 		'SKEY': ('ifs', 'setkey'),
 		'SRPT': ('s', 'setreptype'),
 		'SSCL': ('f', 'setscale'),
-		'SCHN': ('s', 'setchannel'),
-		'BKEY': ('i', 'beginkeys'),
-		'EKEY': ('v', 'endkeys'),
-
-		#'BGKS': ('ii', 'beginkeys'),
-		#'ENKS': ('v', 'endkeys'),
-
-		#'SK1F': ('iff', 'setkey1f'),
-		#'CNCT': ('s', 'connect'),
+	},
+	'nlinknode': {
+		'STGT': ('o', 'settarget'),
 	},
 	'nmeshnode': {
 		'SKEY': ('iffffff', 'setkey'),
@@ -123,7 +187,6 @@ Classes = {
 		'SOCN': ('f', 'setoutercone'),
 		'SSPN': ('f', 'setspin'),
 		'SSPA': ('f', 'setspinaccel'),
-		#'SSTR' :
 		'SEMT': ('s', 'setemmiter'),
 	},
 	'njointanim': {
@@ -151,7 +214,7 @@ Classes = {
 		'SSCL': ('f', 'setscale'),
 		'BGKS': ('ii', 'beginkeys'),
 		'ENKS': ('v', 'endkeys'),
-		#'SIPT': 
+		'SIPT': ('s', '_SIPT'),
 	},
 	'nchnmodulator': {
 		'BGIN': ('i', 'begin'),
@@ -188,13 +251,13 @@ Classes = {
 		'SRPT': ('s', 'setreptype'),
 		'SSCL': ('f', 'setscale'),
 		'SFLN': ('s', 'setfilename'),
-		#EDBD
-		#SBC2
-		#BGBD
-		#BGCB
-		#SCBD
-		#EBCB
-		#SCC2
+		'EDBD': ('v', '_EDBD'),
+		'SBC2': ('iss', '_SBC2'),
+		'BGBD': ('is', '_BGBD'),
+		'BGCB': ('i', '_BGCB'),
+		'SCBD': ('iss', '_SCBD'),
+		'EBCB': ('v', '_EBCB'),
+		'SCC2': ('iss', '_SCBD'),
 	},
 	'nweighttree': {
 		'ANOD': ('sss', 'addnode'),
@@ -224,12 +287,36 @@ Classes = {
 	},
 	'nanimsequence': {
 		'ADTK': ('ffff', '_ADTK'),
-		#ADQK
-		#STIT
-		#SVRL
-		#ADVK
-		#ADAK
-		#ADRK
+		'ADQK': ('fffff', '_ADQK'),
+		'STIT': ('i', '?STIT'),
+		'SVRL': ('b', '_SVRL'),
+		'ADVK': ('fs', '_ADVK'),
+		'ADAK': ('fs', '_ADAK'),
+		'ADRK': ('ffff', '_ADRK'),
+	},
+	'ntrailrender': {
+		'SKEY': ('iffffff', 'setkey'),
+		'BKEY': ('i', 'beginkeys'),
+		'EKEY': ('v', 'endkeys'),
+		'SCHN': ('s', 'setchannel'),
+		'SEMT': ('s', 'setemmiter'),
+		'SRPT': ('s', 'setreptype'),
+		'SSCL': ('f', 'setscale'),
+		'SSPA': ('f', 'setspinaccel'),
+		'SSPN': ('f', 'setspin'),
+		'SSTR': ('b', '_SSTR'),
+	},
+	'nspriterender': {
+		'SRPT': ('s', 'setreptype'),
+		'SCHN': ('s', 'setchannel'),
+		'SSCL': ('f', 'setscale'),
+		'SSPN': ('f', 'setspin'),
+		'SSPA': ('f', 'setspinaccel'),
+		'SEMT': ('s', 'setemmiter'),
+		'BKEY': ('i', 'beginkeys'),
+		'SKEY': ('iffffff', 'setkey'),
+		'EKEY': ('v', 'endkeys'),
+		'SSTR': ('b', '_SSTR'),
 	},
 	'nmeshemitter': { # nparticlesystem
 		'SACC': ('fff', 'setaccel'),
@@ -243,10 +330,172 @@ Classes = {
 		'SMSN': ('s', '_SMSN'),
 		'SFRQ': ('f', 'setfreq'),
 		'SLFT': ('f', 'setlifetime'),
-	}
+	},
+	'nshadernode': {
+		'SMMF': ('s', 'set_min_max_filter'),
+		'SEMV': ('fff', '_SEMV'),
+		'SPOP': ('i', '_SPOP'),
+		'SADR': ('s', 'set_ADR'),
+		'SABL': ('s', 'set_alpha_blending'),
+		'SZFC': ('s', 'set_ZFC'),
+		'SCMD': ('s', 'set_CMD'),
+		'SCLM': ('s', 'set_CLM'),
+		'SAFC': ('s', 'set_AFC'),
+		'SAOP': ('is', 'set_AOP'),
+		'SDIF': ('ffff', 'set_diffuse_color'),
+		'SAMB': ('ffff', 'set_ambient_color'),
+		'SCOT': ('iiiii', '_SCOT'),
+		'SLEN': ('b', 'set_LEN'),
+		'SAEN': ('b', 'set_AEN'),
+		'SZEN': ('b', 'set_ZEN'),
+		'SFEN': ('b', 'set_FEN'),
+		'SATE': ('b', 'set_ATE'),
+		'SENT': ('b', '_SENT'),
+		'SMLB': ('i', '_SMLB'),
+		'SNST': ('i', '_SNST'),
+		'BGTU': ('i', '_BGTU'),
+		'SARF': ('f', '_SARF'),
+		'SRPR': ('i', '_SRPR'),
+		'EDTU': ('v', 'enable_DTU'),
+		'STCS': ('s', 'set_TCS'),
+		'TXYZ': ('fff', 'translate_xyz'),
+		'RXYZ': ('fff', 'rotate_xyz'),
+		'SXYZ': ('fff', 'scale_xyz'),
+	},
+	'nairplane3': {
+		'SATM': ('f', '_SATM'),
+		'SDTM': ('f', '_SDTM'),
+		'SISP': ('f', '_SISP'),
+		'SMPI': ('f', '_SMPI'),	
+		'SMPT': ('f', '_SMPT'),
+		'SMRL': ('f', '_SMRL'),
+		'SMRT': ('f', '_SMRT'),
+		'SXSP': ('f', '_SXSP'),
+		'SXYR': ('f', '_SXYR'),
+		'SYAT': ('f', '_SYAT'),
+	},
+	'nbuildartefact': {
+		'SBEN': ('f', '_SBEN'),
+		'SBPR': ('s', '_SBPR'),
+		'SBTM': ('f', '_SBTM'),
+		'SBRP': ('iff', '?SBRP'),
+		'SMPR': ('i', '_SMPR'),
+		'SSID': ('i', '_SSID'),
+	},
+	######################################
+
+		#'BGKS': ('ii', 'beginkeys'),
+		#'ENKS': ('v', 'endkeys'),
+
+		#'SK1F': ('iff', 'setkey1f'),
+		#'CNCT': ('s', 'connect'),
+	'nairship3':{},
+	'nartefactstorage':{},
+	'nartefacttransformer':{},
+	'nattack':{},
+	'navoidcollision':{},
+	'nbombard':{},
+	'nbomber':{},
+	'nbuildflak':{},
+	'nbuildtradeartefact':{},
+	'nbuildvehicle':{},
+	'ncharaudio':{},
+	'nchnreader':{},
+	'ncinedummy':{},
+	'nclouddesc':{},
+	'ncloudrender':{},
+	'nclouds':{},
+	'ncollectartefact':{},
+	'ncollectore':{},
+	'ncollhandle2':{},
+	'nconsumption':{},
+	'ncontainer':{},
+	'ncritter2':{},
+	'ncrittercollhandle':{},
+	'ncritterdamage':{},
+	'ncritterengine2':{},
+	'nenergycollector':{},
+	'nexplosion':{},
+	'nfactory':{},
+	'nfiremachinegun':{},
+	'nfiremissile':{},
+	'nflak':{},
+	'nflakengine2':{},
+	'nfognode':{},
+	'nfreesteer':{},
+	'ngarage':{},
+	'ngrassrender':{},
+	'nheal':{},
+	'nhouse':{},
+	'nhypermixer2':{},
+	'nipolapproachgarage':{},
+	'nislanddrive':{},
+	'njoint2':{},
+	'nleafrender':{},
+	'nlenseflare':{},
+	'nlightnode':{},
+	'nlistenernode':{},
+	'nmaennel':{},
+	'nmaennelengine3':{},
+	'nmaennelwalk2':{},
+	'nmeshipol':{},
+	'nmeshmixer':{},
+	'nmeshsway':{},
+	'nmgrender':{},
+	'nmissile':{},
+	'nmissilecollcheck':{},
+	'nmissileengine2':{},
+	'nmixer':{},
+	'nmnlcollhandle2':{},
+	'nmodartefact':{},
+	'nnavpoint':{},
+	'nnavpointsteer':{},
+	'nore':{},
+	'npawnshop':{},
+	'nplacehouse':{},
+	'nplacespellaction':{},
+	'npointemitter':{},
+	'npowersupply':{},
+	'nreplenish':{},
+	'nsammler':{},
+	'nshadowcontrol':{},
+	'nsilo':{},
+	'nsoundnode':{},
+	'nspawnpoint':{},
+	'nsquadronwatchtarget':{},
+	'nstandardmenu':{},
+	'nstatewatch':{},
+	'nstaticmeshemitter':{},
+	'nstation':{},
+	'nstationengine3':{},
+	'nstoragemenu':{},
+	'nsubtitle':{},
+	'nswimmingengine':{},
+	'nswingengine':{},
+	'ntestpossess':{},
+	'ntexarraynode':{},
+	'nthreshnode':{},
+	'ntrademenu':{},
+	'ntransformmenu':{},
+	'ntriggerobject':{},
+	'nunloadore':{},
+	'nvehicle':{},
+	'nvehicleemitter':{},
+	'nviewerdata':{},
+	'nvisual':{},
+	'nwalkcollhandle2':{},
+	'nwatchtarget':{},
+	'nweatherdesc':{},
+
 }
 
-GlobalFunctions = {	
+GlobalFunctions = {
+	'SBEN': ('f', '_SBEN'),
+	'SBPR': ('s', '_SBPR'),
+	'SBTM': ('f', '_SBTM'),
+	'SBRP': ('iff', '?SBRP'),
+	'SMPR': ('i', '_SMPR'),
+
 	'SRAD': ('f', 'setradius'),
 	'STGT': ('o', 'settarget'), #object
 	'SXYZ': ('fff', 'sxyz'),
@@ -254,8 +503,6 @@ GlobalFunctions = {
 	'STXT': ('iss', 'settexture'), #TODO return bool
 	'SFAF': ('f', 'setfinishedafter'),
 
-	'SSHP': ('s', '_SSHP'),
-	'SCLC': ('s', '_SCLC'),
 	'SDMG': ('b', '_SDMG'),
 	'SBNC': ('b', '_SBNC'),
 	'SVIS': ('s', '_SVIS'),
@@ -359,11 +606,17 @@ def printClasses():
 	for pair in Classes_A.iteritems():
 		f.write("{}\n".format(pair[0]))
 		for m in pair[1]:
-			f.write("    {}\n".format(m))
+			f.write("\t{}\n".format(m))
 	f.close()
 
 def isOperator(tag):
 	return tag in Operators
+
+def depthTab():
+	if ANALYZE_ONLY:
+		return ""
+	else:
+		return "\t" * (len(Stack) - 1)
 
 def parseTag(tag, f):
 	name = tag
@@ -372,29 +625,37 @@ def parseTag(tag, f):
 	pos = f.tell()
 	if isOperator(tag):
 		(op, name) = Operators[tag]
-		opResult = op(f)
+		try:
+			opResult = op(f)
+		except NameError as e:
+			raise NameError(str(e) + " Op `{}`".format(name))
 		executeOperator(name, opResult)
 		result = " ".join(opResult)
 		if not ANALYZE_ONLY: 
-			print("{} {};".format(name, result))
+			print("{}{} {};".format(depthTab()[:-1], name, result))
 	else:
 		Functions = GlobalFunctions
 		(tp, obj) = Stack[-1]
+		tailPrinter = None
 		if tp in Classes:
 			Functions = Classes[tp]
-		shouldRead = not ANALYZE_ONLY or tag == TARGET_TAG
 		if tag in Functions:
 			(code, name) = Functions[tag]
 			tagSize = readShortI(f)
-			if shouldRead: 
-				result = readArgs(f, code)
+			tagAnalyzer = Tag(tag, name, tp, True, code, obj, tagSize)
+			if tagAnalyzer.shouldRead():
+				try:
+					result = readArgs(f, code)
+				except NameError as e:
+					raise NameError(str(e) + " At `{}::{}({})`".format(tp, name, code))
 			else:
 				result = ""
 			executeFunction(name, result)
 		elif tag in GlobalFunctions:
-			(code, name) = Functions[tag]
+			(code, name) = GlobalFunctions[tag]
 			tagSize = readShortI(f)
-			if shouldRead: 
+			tagAnalyzer = Tag(tag, name, tp, False, code, obj, tagSize)
+			if tagAnalyzer.shouldRead(): 
 				result = readArgs(f, code)
 			else:
 				result = ""
@@ -402,13 +663,13 @@ def parseTag(tag, f):
 		else:
 			tagSize = peekShortI(f)
 			name = "#" + name
-			if shouldRead: 
+			tagAnalyzer = Tag(tag, "", tp, False, "", obj, tagSize)
+			if tagAnalyzer.shouldRead(): 
 				result = readBytes(f)
 			else:
 				result = ""
 			executeFunction(name, result)
-		if shouldRead:
-			print("{}.{}({});".format(obj, name, result))
+		tagAnalyzer.submit(result)
 		f.seek(pos + tagSize + 2)
 
 	if ANALYZE_ONLY:
@@ -421,14 +682,13 @@ def parseTag(tag, f):
 	#print("0x{:0x}: {} {}".format(pos, name, result))
 
 def readTag(f):
-	(tag,) = struct.unpack("4s", f.read(4))
-	tag = str(tag[::-1].decode("utf-8"))
-	pos = f.tell()
-	parseTag(tag, f)
 	try:
-		None
-	except:
-		print("exception at {} - {}".format(tag, hex(pos)))
+		(tag,) = struct.unpack("4s", f.read(4))
+		tag = str(tag[::-1].decode("utf-8"))
+		pos = f.tell()
+		parseTag(tag, f)
+	except NameError as e:
+		raise NameError(str(e) + " Pos {}".format(hex(pos)))
 
 def parse(f, path):
 	f.seek(0, 2)
@@ -446,8 +706,11 @@ def parse(f, path):
 	if not ANALYZE_ONLY:
 		print header
 
-	while f.tell() != fileEnd:
-		readTag(f)
+	try:
+		while f.tell() != fileEnd:
+			readTag(f)
+	except NameError as e:
+		print(str(e) + ' In file `{}`'.format(path))
 
 def convertFile(name):
 	f = open(name, "rb")
