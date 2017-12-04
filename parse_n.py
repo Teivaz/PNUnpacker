@@ -1,4 +1,5 @@
-import struct, os, unicodedata
+import os
+from tagutils import * 
 
 USE_DEVELOPEMENT_FOLDER = False
 ANALYZE_ONLY = True
@@ -8,11 +9,6 @@ if USE_DEVELOPEMENT_FOLDER:
 else:
 	PATH = "../islander/islander_old/_data.npk"
 
-def peek(f, length=1):
-	pos = f.tell()
-	data = f.read(length) # Might try/except this line, and finally: f.seek(pos)
-	f.seek(pos)
-	return data
 
 ######################
 class Tag:
@@ -49,49 +45,6 @@ class Tag:
 			print("{}{}.{}::{}({});".format(depthTab(), self.object, self.className, self.func, result))
 
 
-def isValid(f):
-	(footprint, ) = struct.unpack("<I", f.read(4))
-	return footprint == 0x4e4f4230 #NOB0
-def readShortI(f):
-	(size, ) = struct.unpack("<H", f.read(2))
-	return size
-def peekShortI(f):
-	(size, ) = struct.unpack("<h", peek(f,2))
-	return size
-def readInt(f):
-	(value, ) = struct.unpack("<i", f.read(4))
-	return "{}".format(value)
-def readBool(f):
-	(value, ) = struct.unpack("<?", f.read(1))
-	return "{}".format(value)
-
-def readFloat(f):
-	(value, ) = struct.unpack("<f", f.read(4))
-	return "{}".format(value)
-
-def readString(f):
-	size = readShortI(f)
-	format = "{}s".format(size)
-	(string,) = struct.unpack(format, f.read(size))
-	string.decode(encoding="latin-1", errors="replace")
-	return string
-
-def readVoid(f):
-	return ""
-
-def readNBytes(f, size):
-	format = "{}b".format(size)
-	data = struct.unpack(format, f.read(size))
-	return "{}".format(data)
-
-def readBytes(f):
-	(size, ) = struct.unpack("<h", f.read(2))
-	#strSize = peekShortI(f)
-	#if strSize+2 == size:
-	#	return readString(f)
-	format = "{}b".format(size)
-	data = struct.unpack(format, f.read(size))
-	return "{}".format(data)
 
 
 Arguments = {
@@ -681,34 +634,22 @@ def parseTag(tag, f):
 			print("{} {}".format(name, result))
 	#print("0x{:0x}: {} {}".format(pos, name, result))
 
-def readTag(f):
-	try:
-		(tag,) = struct.unpack("4s", f.read(4))
-		tag = str(tag[::-1].decode("utf-8"))
-		pos = f.tell()
-		parseTag(tag, f)
-	except NameError as e:
-		raise NameError(str(e) + " Pos {}".format(hex(pos)))
-
 def parse(f, path):
 	f.seek(0, 2)
 	fileEnd = f.tell()
 	f.seek(0, 0)
 
-	(footprint, ) = struct.unpack("<I", f.read(4))
-	if footprint != 0x4e4f4230: #NOB0
-		if not ANALYZE_ONLY:
-			print("file invalid: {}".format(path))
-		return
+	if not isValid(f):
+		raise NameError("file invalid: {}".format(path))
 
 	header = readString(f)
 
 	if not ANALYZE_ONLY:
-		print header
+		print(header)
 
 	try:
 		while f.tell() != fileEnd:
-			readTag(f)
+			readTag(f, parseTag)
 	except NameError as e:
 		print(str(e) + ' In file `{}`'.format(path))
 
