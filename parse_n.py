@@ -1,7 +1,7 @@
 import os
-from tagutils import * 
-from classes import Classes
-from globals import GlobalFunctions
+from parse_n_tagutils import * 
+from parse_n_classes import Classes
+from parse_n_globals import GlobalFunctions
 
 USE_DEVELOPEMENT_FOLDER = False
 ANALYZE_ONLY = True
@@ -45,7 +45,6 @@ class Tag:
 			print("{}::{}\t{}".format(self.className, self.tag, result))
 		else:
 			print("{}{}.{}::{}({});".format(depthTab(), self.object, self.className, self.func, result))
-
 
 Arguments = {
 	"s": readString,
@@ -171,7 +170,6 @@ def parseTag(tag, f):
 
 	if ANALYZE_ONLY:
 		return
-
 
 	if False:
 		if name[0] == "#" or name[0] == "?":
