@@ -1,3 +1,5 @@
+Classes2 = {}
+
 Classes = {
 	'n3dnode': {
 		'QXYZ': ('ffff', '_QXYZ'),

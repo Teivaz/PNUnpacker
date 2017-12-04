@@ -1,5 +1,37 @@
 import struct
 
+class ArgAnalyzer:
+	_dataF = []
+	_dataI = []
+	_float = False
+	_integer = False
+
+	@staticmethod
+	def float(enable):
+		ArgAnalyzer._float = enable
+
+	@staticmethod
+	def integer(enable):
+		ArgAnalyzer._integer = enable
+
+	@staticmethod
+	def getFloats():
+		return ArgAnalyzer._dataF
+
+	@staticmethod
+	def getIntegers():
+		return ArgAnalyzer._dataI
+
+	@staticmethod
+	def _insertF(v):
+		if ArgAnalyzer._float:
+			ArgAnalyzer._dataF.append(v)
+
+	@staticmethod
+	def _insertI(v):
+		if ArgAnalyzer._integer:
+			ArgAnalyzer._dataI.append(v)
+
 def peek(f, length=1):
 	pos = f.tell()
 	data = f.read(length) # Might try/except this line, and finally: f.seek(pos)
@@ -17,6 +49,7 @@ def peekShortI(f):
 	return size
 def readInt(f):
 	(value, ) = struct.unpack("<i", f.read(4))
+	ArgAnalyzer._insertI(value)
 	return "{}".format(value)
 def readBool(f):
 	(value, ) = struct.unpack("<?", f.read(1))
@@ -24,6 +57,7 @@ def readBool(f):
 
 def readFloat(f):
 	(value, ) = struct.unpack("<f", f.read(4))
+	ArgAnalyzer._insertF(value)
 	return "{}".format(value)
 
 def readString(f):

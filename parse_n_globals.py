@@ -1,5 +1,5 @@
-
-GlobalFunctions = {
+GlobalFunctions = {}
+GlobalFunctions2 = {
 	'SBEN': ('f', '_SBEN'),
 	'SBPR': ('s', '_SBPR'),
 	'SBTM': ('f', '_SBTM'),
@@ -16,7 +16,6 @@ GlobalFunctions = {
 	'SDMG': ('b', '_SDMG'),
 	'SBNC': ('b', '_SBNC'),
 	'SVIS': ('s', '_SVIS'),
-	'SAUD': ('s', '_SAUD'),
 	'STOU': ('f', '_STOU'),
 	'DACC': ('v', '_DACC'),
 	'AACC': ('s', '_AACC'),

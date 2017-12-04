@@ -1,16 +1,59 @@
-import os
+import os, json
 from parse_n_tagutils import * 
 from parse_n_classes import Classes
 from parse_n_globals import GlobalFunctions
+from parse_n_analyze import *
 
 USE_DEVELOPEMENT_FOLDER = False
-ANALYZE_ONLY = True
+ANALYZE_ONLY = False
 
 if USE_DEVELOPEMENT_FOLDER:
 	PATH = "nvx/_main.n"
 else:
 	PATH = "../islander/islander_old/_data.npk"
 
+def error(s):
+	raise NameError(s)
+	print(s)
+
+def log(s):
+	None
+	#print(s)
+
+class FuncDataCollector:
+	def __init__(self, classFuncs):
+		self.funcs = classFuncs
+
+	def __getitem__(self, funcName):
+		if not funcName in self.funcs.keys():
+			self.funcs[funcName] = []
+		func = self.funcs[funcName]
+		def insert(data, size):
+			func.append({
+				'len': size,
+				'probs': data,
+			})
+		return insert
+
+	def toJSON(self, *args, **kwargs):
+		return json.dumps(self.funcs, *args, **kwargs)
+
+class ClassDataCollector:
+	def __init__(self):
+		self.data = {}
+
+	def __getitem__(self, className):
+		if not className in self.data.keys():
+			self.data[className] = {}
+		return FuncDataCollector(self.data[className])
+
+	def toJSON(self, *args, **kwargs):
+		return json.dumps(self.data, *args, **kwargs)
+
+	def keys(self):
+		return self.data.keys()
+
+_tags = ClassDataCollector()
 
 ######################
 class Tag:
@@ -29,6 +72,18 @@ class Tag:
 		self.args = code
 		self.object = obj
 		self.size = tagSize
+		self._p = False
+
+	def unknownArgs(self, f):
+		if True:
+			global _tags
+			classData = _tags[self.className]
+			funData = classData[self.tag]
+			f.read(2)
+			argLen = self.size
+			funData(estimate(f.read(argLen), argLen), argLen)
+			return True, ""
+		return False
 
 	def shouldRead(self):
 		if not ANALYZE_ONLY:
@@ -41,10 +96,12 @@ class Tag:
 	def submit(self, result):
 		if not self.shouldRead():
 			return
-		if ANALYZE_ONLY:
+		if self._p:
 			print("{}::{}\t{}".format(self.className, self.tag, result))
+		if ANALYZE_ONLY:
+			log("{}::{}\t{}".format(self.className, self.tag, result))
 		else:
-			print("{}{}.{}::{}({});".format(depthTab(), self.object, self.className, self.func, result))
+			log("{}{}.{}::{}({});".format(depthTab(), self.object, self.className, self.func, result))
 
 Arguments = {
 	"s": readString,
@@ -128,11 +185,11 @@ def parseTag(tag, f):
 		executeOperator(name, opResult)
 		result = " ".join(opResult)
 		if not ANALYZE_ONLY: 
-			print("{}{} {};".format(depthTab()[:-1], name, result))
+			log("{}{} {};".format(depthTab()[:-1], name, result))
 	else:
+		tagSize = peekShortI(f)
 		Functions = GlobalFunctions
 		(tp, obj) = Stack[-1]
-		tailPrinter = None
 		if tp in Classes:
 			Functions = Classes[tp]
 		if tag in Functions:
@@ -151,19 +208,23 @@ def parseTag(tag, f):
 			(code, name) = GlobalFunctions[tag]
 			tagSize = readShortI(f)
 			tagAnalyzer = Tag(tag, name, tp, False, code, obj, tagSize)
-			if tagAnalyzer.shouldRead(): 
-				result = readArgs(f, code)
+			if tagAnalyzer.shouldRead():
+				try:
+					result = readArgs(f, code)
+				except NameError as e:
+					raise NameError(str(e) + " At Global `{}::{}({})`".format(tp, name, code))
 			else:
 				result = ""
 			executeFunction(name, result)
 		else:
-			tagSize = peekShortI(f)
-			name = "#" + name
 			tagAnalyzer = Tag(tag, "", tp, False, "", obj, tagSize)
-			if tagAnalyzer.shouldRead(): 
-				result = readBytes(f)
-			else:
-				result = ""
+			processed, result = tagAnalyzer.unknownArgs(f)
+			if not processed:
+				name = "#" + name
+				if tagAnalyzer.shouldRead(): 
+					result = readBytes(f)
+				else:
+					result = ""
 			executeFunction(name, result)
 		tagAnalyzer.submit(result)
 		f.seek(pos + tagSize + 2)
@@ -173,8 +234,8 @@ def parseTag(tag, f):
 
 	if False:
 		if name[0] == "#" or name[0] == "?":
-			print("{} {}".format(name, result))
-	#print("0x{:0x}: {} {}".format(pos, name, result))
+			log("{} {}".format(name, result))
+	#log("0x{:0x}: {} {}".format(pos, name, result))
 
 def parse(f, path):
 	f.seek(0, 2)
@@ -182,25 +243,27 @@ def parse(f, path):
 	f.seek(0, 0)
 
 	if not isValid(f):
-		raise NameError("file invalid: {}".format(path))
+		log("File invalid {}".format(path))
+		return
+		#raise NameError("file invalid: {}".format(path))
 
 	header = readString(f)
 
 	if not ANALYZE_ONLY:
-		print(header)
+		log(header)
 
 	try:
 		while f.tell() != fileEnd:
 			readTag(f, parseTag)
 	except NameError as e:
-		print(str(e) + ' In file `{}`'.format(path))
+		error(str(e) + ' In file `{}`'.format(path))
 
 def convertFile(name):
 	f = open(name, "rb")
 	try:
 		parse(f, name)
 	except NameError as e:
-		print("Parsing error {}".format(e))
+		error("Parsing error {}".format(e))
 	f.close()
 
 def listDirsAndFiles(path):
@@ -226,8 +289,12 @@ def convertDir(path):
 			convertDir(dName)
 
 def main():
+	ArgAnalyzer.float(True)
 	convertDir(os.path.abspath(PATH))
 	#if ANALYZE_ONLY:
 	#	printClasses()
+	for k in _tags.keys():
+		with open('src/{}.json'.format(k), 'w') as fjs:
+			fjs.write(_tags[k].toJSON(indent=2))
 
 main()
