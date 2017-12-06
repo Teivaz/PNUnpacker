@@ -1,10 +1,44 @@
-import struct, re
+import struct, re, json, math
+from parse_n_density import RangeLinear, RangeExp
+
+types = {
+	'i': ['data/density_i.json', RangeLinear],
+	'f': ['data/density_f.json', RangeExp],
+}
+
+class DensityMatch:
+	def __init__(self, filename, range):
+		self.range = range()
+		self.data = {}
+		try:
+			with open(filename) as f:
+				self.data = json.loads(f.read())
+		except:
+			None
+
+	def prob(self, v):
+		if v == 0:
+			return 0.1
+		if math.isnan(v):
+			return 0
+		idx = self.range.idx(v)
+		idx = str(idx)
+		if idx in self.data.keys():
+			prob = self.data[idx]
+			# Need to have logarithmic scale
+			base = 1.3 # the closer to 1 the more probability it would get
+			prob = math.pow(base, prob) / base * 0.9
+			return prob
+		return 0.001
+
+densityIntMatch = DensityMatch(*types['i'])
+densityFloatMatch = DensityMatch(*types['f'])
 
 def probInt(val):
-	return 0.1 # TODO: estimate how adequate this int is
+	return densityIntMatch.prob(val)
 
 def probFloat(val):
-	return 0.1 # TODO: estimate how adequate this int is
+	return densityFloatMatch.prob(val)
 
 class Probs:
 	def __init__(self):
@@ -43,7 +77,7 @@ def estimateFloat(bytes, size):
 
 TestString = re.compile(r'^[a-zA-Z0-9/\\_\-\.:]*$')
 def estimateString(bytes, size):
-	maxProb = 8.0
+	maxProb = 10.0
 	if size < 2:
 		return
 	(strLen,) = struct.unpack('<H', bytes[0:2])

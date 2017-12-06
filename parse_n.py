@@ -1,11 +1,25 @@
+USE_DEVELOPEMENT_FOLDER = 0
+
+ANALYZE_ONLY = 0
+
+# Read all known ints and save them to 'data/ints.json'.
+# Then build distribution density at 'data/density_i.json'
+ANALYZE_INTS = 0
+
+# Read all known floats and save them to 'data/floats.json'.
+# Then build distribution density at 'data/density_f.json'
+ANALYZE_FLOATS = 0
+
+# Save all unknown calasses' argument probabilities to the file
+SAVE_CLASSES_PROBS = 1
+
 import os, json
 from parse_n_tagutils import * 
 from parse_n_classes import Classes
 from parse_n_globals import GlobalFunctions
-from parse_n_analyze import *
+from parse_n_analyze import estimate
+from parse_n_density import saveDensity
 
-USE_DEVELOPEMENT_FOLDER = False
-ANALYZE_ONLY = False
 
 if USE_DEVELOPEMENT_FOLDER:
 	PATH = "nvx/_main.n"
@@ -75,7 +89,7 @@ class Tag:
 		self._p = False
 
 	def unknownArgs(self, f):
-		if True:
+		if SAVE_CLASSES_PROBS:
 			global _tags
 			classData = _tags[self.className]
 			funData = classData[self.tag]
@@ -83,7 +97,7 @@ class Tag:
 			argLen = self.size
 			funData(estimate(f.read(argLen), argLen), argLen)
 			return True, ""
-		return False
+		return False, ""
 
 	def shouldRead(self):
 		if not ANALYZE_ONLY:
@@ -229,9 +243,6 @@ def parseTag(tag, f):
 		tagAnalyzer.submit(result)
 		f.seek(pos + tagSize + 2)
 
-	if ANALYZE_ONLY:
-		return
-
 	if False:
 		if name[0] == "#" or name[0] == "?":
 			log("{} {}".format(name, result))
@@ -288,13 +299,32 @@ def convertDir(path):
 		for dName in dNames:
 			convertDir(dName)
 
-def main():
-	ArgAnalyzer.float(True)
-	convertDir(os.path.abspath(PATH))
-	#if ANALYZE_ONLY:
-	#	printClasses()
+def dumpProbs():
+	global _tags
 	for k in _tags.keys():
+		print('saving {}'.format(k))
 		with open('src/{}.json'.format(k), 'w') as fjs:
 			fjs.write(_tags[k].toJSON(indent=2))
 
-main()
+def main():
+	if ANALYZE_INTS:
+		ArgAnalyzer.integer(True)
+	if ANALYZE_FLOATS:
+		ArgAnalyzer.float(True)
+
+	convertDir(os.path.abspath(PATH))
+	if ANALYZE_INTS:
+		with open('ints.json', 'w') as f:
+			f.write(json.dumps(ArgAnalyzer.getIntegers()))
+		saveDensity('i', False)
+	if ANALYZE_FLOATS:
+		with open('floats.json', 'w') as f:
+			f.write(json.dumps(ArgAnalyzer.getFloats()))
+		saveDensity('f', True)
+	if ANALYZE_ONLY:
+		printClasses()
+	if SAVE_CLASSES_PROBS:
+		dumpProbs()
+
+if __name__ == '__main__':
+	main()
