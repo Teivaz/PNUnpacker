@@ -1,6 +1,6 @@
 USE_DEVELOPEMENT_FOLDER = 0
 
-ANALYZE_ONLY = 0
+ANALYZE_ONLY = 1
 
 # Read all known ints and save them to 'data/ints.json'.
 # Then build distribution density at 'data/density_i.json'
@@ -11,7 +11,7 @@ ANALYZE_INTS = 0
 ANALYZE_FLOATS = 0
 
 # Save all unknown calasses' argument probabilities to the file
-SAVE_CLASSES_PROBS = 1
+SAVE_CLASSES_PROBS = 0
 
 import os, json
 from parse_n_tagutils import * 
@@ -89,6 +89,7 @@ class Tag:
 		self._p = False
 
 	def unknownArgs(self, f):
+		raise NameError('unknown')
 		if SAVE_CLASSES_PROBS:
 			global _tags
 			classData = _tags[self.className]
@@ -105,7 +106,7 @@ class Tag:
 		#return not self.known
 		#return self.tag == "QXYZ"
 		#return self.tag == "SATM" and self.className == "nairplane3"
-		return self.tag == 'SMPR'
+		return self.tag == 'STIT'
 
 	def submit(self, result):
 		if not self.shouldRead():
