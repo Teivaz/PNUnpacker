@@ -37,6 +37,10 @@ class OutputTagStream:
         tag_stream = OutputStream(io.BytesIO())
         tag_writer(tag_stream, self)
         length = tag_stream.tell()
+        tag_stream.seek(0, 0)
+        self.write_raw(tag, length, tag_stream)
+
+    def write_raw(self, tag, length, stream):
         self.stream.wtite_tag_name(tag)
         self.stream.write_uint(length)
-        self.stream.write(tag_stream.readall())
+        self.stream.write_stream(stream)

@@ -47,6 +47,12 @@ class OutputStream:
 
     def tell(self):
         return self.stream.tell()
+    
+    def seek(self, *args, **kwargs):
+        return self.stream.seek(*args, **kwargs)
+
+    def read(self, length):
+        return self.stream.read(length)
 
     def readall(self):
         current = self.stream.tell()
@@ -62,6 +68,13 @@ class OutputStream:
         self.stream.seek(current, 0)
         return stream_end
 
+    def write_stream(self, src, buffer_size=16*1024*1024):
+        while True:
+            buf = src.read(buffer_size)
+            if not buf:
+                break
+            self.stream.write(buf)
+            
     def write(self, data):
         self.stream.write(data)
 

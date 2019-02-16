@@ -1,8 +1,8 @@
-import struct, os, io
+import struct, os, io, tempfile
 
 from .tag_stream import InputTagStream, OutputTagStream
 from .stream import OutputStream
-
+		
 class File:
 	def __init__(self, offset, length, name, path):
 		self.offset = offset
@@ -96,18 +96,23 @@ class Packer:
 	def __init__(self, source, target):
 		self.source = source
 		self.target = target
-		self.data_buffer = OutputStream(io.BytesIO())
-		self.tag_buffer = OutputStream(io.BytesIO())
 
-		self._run()
+		with tempfile.TemporaryFile() as f1, tempfile.TemporaryFile() as f2:
+			self.dir_writer = OutputTagStream(f1)
+			self.data_stream = OutputStream(f2)
+
+			self._run()
+	
+		self.dir_writer = None
+		self.data_stream = None
 
 	def _write_NPK0(self, stream, writer):
-		stream.write_uint(len(self.tag_buffer) + 12)
+		stream.write_uint(len(self.dir_writer.stream) + 12)
 
 	def _write_FILE(self, path, name):
-		offset = self.data_buffer.tell()
+		offset = self.data_stream.tell()
 		with open(path, "rb") as f:
-			self.data_buffer.write(f.read())
+			self.data_stream.write(f.read())
 			length = f.tell()
 		def writer(stream, writer):
 			stream.write_uint(offset)
@@ -137,17 +142,18 @@ class Packer:
 	def _write_DEND(self, stream, writer):
 		pass
 
-	def _write_DATA(self, stream, writer):
-		stream.write(self.data_buffer.readall())
 		
 	def _run(self):
-		writer = OutputTagStream(self.tag_buffer)
-		self._write_directory_content(self.source, writer)
+		self._write_directory_content(self.source, self.dir_writer)
 		with open(self.target, "wb") as f:
 			writer = OutputTagStream(f)
 			writer.write("NPK0", self._write_NPK0)
-			writer.stream.write(self.tag_buffer.readall())
-			writer.write("DATA", self._write_DATA)
+			
+			self.dir_writer.stream.seek(0, 0)
+			writer.stream.write_stream(self.dir_writer.stream)
+
+			self.data_stream.seek(0, 0)
+			writer.write_raw("DATA", len(self.data_stream), self.data_stream)
 
 
 def pack(source, target):
