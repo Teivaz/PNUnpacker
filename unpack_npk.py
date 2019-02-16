@@ -1,159 +1,121 @@
-import struct, json, os
+import struct, os
 
 FILE = "data.npk"
-
-VERBOSE = 1
-
-def isChar(b):
-	return (32 <= b) and (126 >= b)
-
-def toString(bytes, size):
-	format = str(size) + "c"
-	bytes = struct.unpack(format, bytes)
-	string = ""
-	byteString = ""
-	for b in bytes:
-		bByte = ord(b)
-		if isChar(bByte):
-			string += " " + b + "|"
-		else:
-			string += "  |"
-		byteString += "{:02x}|".format(bByte)
+VERBOSE = 0
 
 
-	return string, byteString
+TAG_NPK = 0x4e504b30	# "NPK0"
+TAG_FILE = 0x46494c45	# "FILE"
+TAG_DIR = 0x4449525f	# "DIR_"
+TAG_DEND = 0x44454e44	# "DEND"
+TAG_DATA = 0x44415441	# "DATA"
 
-TAG_NPK = 0x4e504b30
-TAG_FILE = 0x46494c45
-TAG_DIR = 0x4449525f
-TAG_DEND = 0x44454e44
-TAG_DATA = 0x44415441
+def read_uint(f):
+	(value, ) = struct.unpack("<I", f.read(4))
+	return value
 
-TAG_NAMES = {
-	TAG_NPK: "NPK0",
-	TAG_FILE: "FILE",
-	TAG_DIR: "DIR_",
-	TAG_DEND: "DEND",
-	TAG_DATA: "DATA"
-}
+def read_short(f):
+	(value, ) = struct.unpack("<h", f.read(2))
+	return value
 
-CD = []
-DATA = {}
-FILES = []
+def read_string(f):
+	size = read_short(f)
+	format = "{}s".format(size)
+	(value, ) = struct.unpack(format, f.read(size))
+	return value.decode("iso-8859-1")
 
-def openDir(name):
-	if VERBOSE > 0:
-		pad = "    " * len(CD)
-		text = pad + "dir: " + str(name) 
-		print(text)
+class File:
+	def __init__(self, offset, length, name, path):
+		self.offset = offset
+		self.length = length
+		self.name = name
+		self.path = path
 
-	CD.append(name)
-
-def closeDir():
-	CD.pop()
-
-def openFile(name):
-	if VERBOSE > 0:
-		pad = "    " * len(CD)
-		text = pad + "file: " + name 
-		print(text)
-
-	path = list()
-	path.extend(CD)
-	path.append(name)
-	fileName = "/".join(path)
-	currentFile = {}
-	currentFile["fullName"] = fileName
-	currentFile["name"] = name
-	FILES.append(currentFile)
-	return currentFile
+	def write(self, data):
+		os.makedirs(self.path, exist_ok=True)
+		full_name = os.path.join(self.path, self.name)
+		end = self.offset + self.length
+		with open(full_name, "wb") as f:
+			f.write(data[self.offset:end])
 
 
-def readDIR(data, length):
-	format = "<h{0}c".format(length-2)
-	result = struct.unpack(format, data)
-	nameLen = result[0]
-	name = str(b"".join(result[1:]))
-	openDir(name)
+class Decoder:
+	def __init__(self, source):
+		self.directory_stack = []
+		self.source = source
+		self.data = {}
+		self.files = []
 
-def readDEND(data, length):
-	closeDir()
+	def _open_dir(self, name):
+		if VERBOSE > 0:
+			pad = "    " * len(self.directory_stack)
+			text = pad + "dir: " + str(name) 
+			print(text)
 
-def readFILE(data, length):
-	format = "<IIh{0}c".format(length-10)
-	result = struct.unpack(format, data)
-	start = result[0]
-	length = result[1]
-	nameLen = result[2]
-	name = "".join(result[3:])
-	CF = openFile(name)
-	CF["start"] = start
-	CF["length"] = length
-	CF["nameLen"] = nameLen
+		self.directory_stack.append(name)
 
-def readDATA(data, length):
-	#format = "{0}c".format(length)
-	DATA["d"] = data# = struct.unpack(format, data)
-	#string, bytes = toString(data, length)
-	#print("{0}\n{1}\n".format(string, bytes))
+	def _close_dir(self):
+		self.directory_stack.pop()
 
-def readTag(tag, data, length):
-	if tag == TAG_NPK:
-		None
-	if tag == TAG_DIR:
-		readDIR(data, length)
-	if tag == TAG_DEND:
-		readDEND(data, length)
-	if tag == TAG_FILE:
-		readFILE(data, length)
-	if tag == TAG_DATA:
-		readDATA(data, length)
+	def _open_file(self, offset, length, name):
+		if VERBOSE > 0:
+			pad = "    " * len(self.directory_stack)
+			text = pad + "file: " + name 
+			print(text)
 
-def readStreamTag(tag, stream, size):
-	data = stream.read(size)
-	readTag(tag, data, size)
+		path = os.path.join("_"+self.source, *self.directory_stack)
+		self.files.append(File(offset, length, name, path))
+		
+	def _read_DIR(self, data, length):
+		name = read_string(data)
+		self._open_dir(name)
 
-def createDir(parent):
-	if not os.path.exists(parent):
-		os.mkdir(parent)
+	def _read_DEND(self, data, length):
+		self._close_dir()
 
-def createFile(f):
-	fullName = f["fullName"]
-	dirs = fullName.split("/")
-	name = dirs.pop()
-	parent = "_" + FILE
-	createDir(parent)
-	for d in dirs:
-		parent = "{0}/{1}".format(parent, d)
-		createDir(parent)
-	return open(parent + "/" + name, "wb")
+	def _read_FILE(self, data, length):
+		offset = read_uint(data)
+		length = read_uint(data)
+		name = read_string(data)
+		self._open_file(offset, length, name)
 
-def writeFiles(files):
-	for f in files:
-		#print(f)
-		handle = createFile(f)
-		start = f["start"]
-		end = start + f["length"]
-		handle.write("".join(DATA["d"][start:end]))
-		handle.close()
+	def _read_DATA(self, data, length):
+		self.data = data.read(length)
 
-f = open(FILE, "rb")
-f.seek(0, 2)
-fileEnd = f.tell()
-f.seek(0, 0)
+	def _read_tag(self, tag, data, length):
+		if tag == TAG_NPK:
+			None
+		if tag == TAG_DIR:
+			self._read_DIR(data, length)
+		if tag == TAG_DEND:
+			self._read_DEND(data, length)
+		if tag == TAG_FILE:
+			self._read_FILE(data, length)
+		if tag == TAG_DATA:
+			self._read_DATA(data, length)
 
-while f.tell() != fileEnd:
-	addr = f.tell()
-	(tag, size) = struct.unpack("<II", f.read(8))
-	#print("{0}: {1} {2}".format(hex(addr), size, TAG_NAMES[tag]))
-	#readPayload(f, size)
-	readStreamTag(tag, f, size)
-#print(DATA)
+	def _read_stream_tag(self, tag, data, length):
+		position = data.tell()
+		self._read_tag(tag, data, length)
+		data.seek(position+length, 0)
 
-writeFiles(FILES)
+	def _write_files(self):
+		for f in self.files:
+			f.write(self.data)
 
-#print(json.dumps(FILES, indent=2))
+	def run(self):
+		with open(self.source, "rb") as f:
+			f.seek(0, 2)
+			file_end = f.tell()
+			f.seek(0, 0)
 
-print("ok")
+			while f.tell() != file_end:
+				tag = read_uint(f)
+				length = read_uint(f)
+				self._read_stream_tag(tag, f, length)
+				
+		self._write_files()
 
-f.close()
+	
+if __name__ == "__main__":
+	Decoder(FILE).run()

@@ -1,3 +1,7 @@
 /ntx.log
 /nvx.log
 *.pyc
+/_data.npk
+/_data1.npk
+/data.npk
+/data1.npk
