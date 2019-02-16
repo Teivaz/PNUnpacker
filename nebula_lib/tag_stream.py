@@ -1,9 +1,10 @@
 from .errors import StreamError
-from .stream import Stream
+from .stream import InputStream, OutputStream
+import io
 
-class TagReader():
+class InputTagStream():
     def __init__(self, stream):
-        self.stream = Stream(stream)
+        self.stream = InputStream(stream)
 
     # tag_reader = {
     #   "NPK0": lambda (stream, length, reader): stream.skip(length)
@@ -26,3 +27,16 @@ class TagReader():
             self.stream.seek(end, 0)
 
         return result
+
+class OutputTagStream:
+    def __init__(self, stream):
+        self.stream = OutputStream(stream)
+
+    # tag_writer = lambda (stream, writer): stream.write_uint(10)
+    def write(self, tag, tag_writer):
+        tag_stream = OutputStream(io.BytesIO())
+        tag_writer(tag_stream, self)
+        length = tag_stream.tell()
+        self.stream.wtite_tag_name(tag)
+        self.stream.write_uint(length)
+        self.stream.write(tag_stream.readall())

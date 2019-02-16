@@ -1,6 +1,7 @@
-import struct, os
+import struct, os, io
 
-from .tag_reader import TagReader
+from .tag_stream import InputTagStream, OutputTagStream
+from .stream import OutputStream
 
 class File:
 	def __init__(self, offset, length, name, path):
@@ -83,10 +84,71 @@ class Unpacker:
 			"DATA": self._read_DATA,
 		}
 		with open(self.source, "rb") as f:
-			reader = TagReader(f)
+			reader = InputTagStream(f)
 			length = len(reader.stream)
 			while reader.stream.tell() != length:
 				reader.read(readers)
 
 def unpack(source, verbosity=0):
 	Unpacker(source, verbosity)
+
+class Packer:
+	def __init__(self, source, target):
+		self.source = source
+		self.target = target
+		self.data_buffer = OutputStream(io.BytesIO())
+		self.tag_buffer = OutputStream(io.BytesIO())
+
+		self._run()
+
+	def _write_NPK0(self, stream, writer):
+		stream.write_uint(len(self.tag_buffer) + 12)
+
+	def _write_FILE(self, path, name):
+		offset = self.data_buffer.tell()
+		with open(path, "rb") as f:
+			self.data_buffer.write(f.read())
+			length = f.tell()
+		def writer(stream, writer):
+			stream.write_uint(offset)
+			stream.write_uint(length)
+			stream.write_string(name)
+		return writer
+		
+	def _write_directory_content(self, path, writer):
+		dir_content = os.listdir(path)
+		files = [f for f in dir_content if os.path.isfile(os.path.join(path, f))]
+		dirs = [f for f in dir_content if os.path.isdir(os.path.join(path, f))]
+		for f in files:
+			file_path = os.path.join(path, f)
+			writer.write("FILE", self._write_FILE(file_path, f))
+
+		for d in dirs:
+			dir_path = os.path.join(path, d)
+			writer.write("DIR_", self._write_DIR(d))
+			self._write_directory_content(dir_path, writer)
+			writer.write("DEND", self._write_DEND)
+
+	def _write_DIR(self, name):
+		def writer(stream, writer):
+			stream.write_string(name)
+		return writer
+
+	def _write_DEND(self, stream, writer):
+		pass
+
+	def _write_DATA(self, stream, writer):
+		stream.write(self.data_buffer.readall())
+		
+	def _run(self):
+		writer = OutputTagStream(self.tag_buffer)
+		self._write_directory_content(self.source, writer)
+		with open(self.target, "wb") as f:
+			writer = OutputTagStream(f)
+			writer.write("NPK0", self._write_NPK0)
+			writer.stream.write(self.tag_buffer.readall())
+			writer.write("DATA", self._write_DATA)
+
+
+def pack(source, target):
+	Packer(source, target)
