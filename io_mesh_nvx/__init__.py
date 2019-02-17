@@ -22,7 +22,7 @@
 bl_info = {
     "name": "Nebula Machine mesh format (.nvx)",
     "author": "Teivaz",
-    "version": (0, 1),
+    "version": (0, 2),
     "blender": (2, 57, 0),
     "location": "File > Import-Export > Nebula (.nvx) ",
     "description": "Import-Export Nebula",

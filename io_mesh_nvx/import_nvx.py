@@ -35,124 +35,262 @@ Generates the standard verts and faces lists.
 
 import bpy, bmesh, struct
 
-''' Format Description '''
-MESH_HAS_POS =   0b00000001 # has xyz
-MESH_HAS_NORM =  0b00000010 # has normals
-MESH_HAS_COLOR = 0b00000100 # has color
-MESH_HAS_UV0 =   0b00001000 # has UV0
-MESH_HAS_UV1 =   0b00010000 # has UV1
-MESH_HAS_UV2 =   0b00100000 # has UV2
-MESH_HAS_UV3 =   0b01000000 # has UV3
-MESH_HAS_LINKS=  0b10000000 # has joint indices for skinning and weights
+class Stream:
+    def __init__(self, stream):
+        self.stream = stream
+    
+    def seek(self, *args, **kwargs):
+        return self.stream.seek(*args, **kwargs)
 
-def readInt(f):
-    (r, ) = struct.unpack("<I", f.read(4))
-    return r
-def readShort(f):
-    (r, ) = struct.unpack("<H", f.read(2))
-    return r
-def readFloat(f):
-    (r, ) = struct.unpack("<f", f.read(4))
-    return r
+    def read_float(self):
+        (v, ) = struct.unpack("<f", self.stream.read(4))
+        return v
+
+    def write_float(self, value):
+        self.stream.write(struct.pack("<f", value))
+    
+    def read_byte(self):
+        (v, ) = struct.unpack("<B", self.stream.read(1))
+        return v
+
+    def write_byte(self, value):
+        self.stream.write(struct.pack("<B", value))
+    
+    def read_ushort(self):
+        (v, ) = struct.unpack("<H", self.stream.read(2))
+        return v
+
+    def write_ushort(self, value):
+        self.stream.write(struct.pack("<H", value))
+    
+    def read_uint(self):
+        (v, ) = struct.unpack("<I", self.stream.read(4))
+        return v
+
+    def write_uint(self, value):
+        self.stream.write(struct.pack("<I", value))
+
+class Vector3:
+    def __init__(self, x=0, y=0, z=0, stream=None):
+        self.x = x
+        self.y = y
+        self.z = z
+        if stream:
+            self.from_stream(stream)
+
+    def __iter__(self):
+        return iter((self.x, self.y, self.z))
+
+    def from_stream(self, stream):
+        self.x = stream.read_float()
+        self.y = stream.read_float()
+        self.z = stream.read_float()
+
+    def to_stream(self, stream):
+        stream.write_float(self.x)
+        stream.write_float(self.y)
+        stream.write_float(self.z)
+
+class Vector2:
+    def __init__(self, x=0, y=0, stream=None):
+        self.x = x
+        self.y = y
+        if stream:
+            self.from_stream(stream)
+
+    def __iter__(self):
+        return iter((self.x, self.y))
+
+    def from_stream(self, stream):
+        self.x = stream.read_float()
+        self.y = stream.read_float()
+
+    def to_stream(self, stream):
+        stream.write_float(self.x)
+        stream.write_float(self.y)
+
+class Color:
+    def __init__(self, r=0, g=0, b=0, a=0, stream=None):
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+        if stream:
+            self.from_stream(stream)
+
+    def __iter__(self):
+        return iter((self.r, self.g, self.b, self.a))
+
+    def from_stream(self, stream):
+        self.r = stream.read_byte()
+        self.g = stream.read_byte()
+        self.b = stream.read_byte()
+        self.a = stream.read_byte()
+
+    def to_stream(self, stream):
+        stream.write_byte(self.r)
+        stream.write_byte(self.g)
+        stream.write_byte(self.b)
+        stream.write_byte(self.a)
+
+class Quad:
+    def __init__(self, a=0, b=0, c=0, d=0, stream=None):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+        if stream:
+            self.from_stream(stream)
+
+    def __iter__(self):
+        return iter((self.a, self.b, self.c, self.d))
+
+    def from_stream(self, stream):
+        self.a = stream.read_ushort()
+        self.b = stream.read_ushort()
+        self.c = stream.read_ushort()
+        self.d = stream.read_ushort()
+
+    def to_stream(self, stream):
+        stream.write_ushort(self.a)
+        stream.write_ushort(self.b)
+        stream.write_ushort(self.c)
+        stream.write_ushort(self.d)
+
+class BoneGroup:
+    def __init__(self, b0=0, b1=0, b2=0, b3=0, w0=0, w1=0, w2=0, w3=0, stream=None):
+        self.b0 = b0
+        self.b1 = b1
+        self.b2 = b2
+        self.b3 = b3
+        self.w0 = w0
+        self.w1 = w1
+        self.w2 = w2
+        self.w3 = w3
+        if stream:
+            self.from_stream(stream)
+
+    def from_stream(self, stream):
+        self.b0 = stream.read_ushort()
+        self.b1 = stream.read_ushort()
+        self.b2 = stream.read_ushort()
+        self.b3 = stream.read_ushort()
+        self.w0 = stream.read_float()
+        self.w1 = stream.read_float()
+        self.w2 = stream.read_float()
+        self.w3 = stream.read_float()
+
+    def to_stream(self, stream):
+        stream.write_ushort(self.b0)
+        stream.write_ushort(self.b1)
+        stream.write_ushort(self.b2)
+        stream.write_ushort(self.b3)
+        stream.write_float(self.w0)
+        stream.write_float(self.w1)
+        stream.write_float(self.w2)
+        stream.write_float(self.w3)
+
 
 class Mesh(object):
-    Format = None
-    Positions = None # [ (x, y, z), (x, y, z) ]
-    Normals = None # [ (x, y, z), (x, y, z) ]
-    Colors = None # [c, c, c]
-    UV0 = None # [ (u, v), (u, v) ]
-    UV1 = None # [ (u, v), (u, v) ]
-    UV2 = None # [ (u, v), (u, v) ]
-    UV3 = None # [ (u, v), (u, v) ]
-    Groups = None # [ ( (ia, ib, ic, id), (wa, wb, wc, wd) ), ... ]
-    WingedEdges = None # [ (a, b, c, d), (a, b, c, d) ]
-    Indices = None # [ (a, b, c), (a, b, c) ]
-    NumVerts = None
-    NumWingedEdges = None
-    NumIndices = None
-    DataSize = None
+    HAS_POS = 0b00000001 # has xyz
+    HAS_NORM = 0b00000010 # has normals
+    HAS_COLOR = 0b00000100 # has color
+    HAS_UV0 = 0b00001000 # has UV0
+    HAS_UV1 = 0b00010000 # has UV1
+    HAS_UV2 = 0b00100000 # has UV2
+    HAS_UV3 = 0b01000000 # has UV3
+    HAS_BONE_GROUPS = 0b10000000 # has joint indices for skinning and weights
 
-    def __init__(self, f):
-        self.Positions = [] # [ (x, y, z), (x, y, z) ]
-        self.Normals = [] # [ (x, y, z), (x, y, z) ]
-        self.Colors = [] # [c, c, c]
-        self.UV0 = [] # [ (u, v), (u, v) ]
-        self.UV1 = [] # [ (u, v), (u, v) ]
-        self.UV2 = [] # [ (u, v), (u, v) ]
-        self.UV3 = [] # [ (u, v), (u, v) ]
-        self.Groups = [] # [ ( (ia, ib, ic, id), (wa, wb, wc, wd) ), ... ]
-        self.WingedEdges = [] # [ (a, b, c, d), (a, b, c, d) ]
-        self.Indices = [] # [ (a, b, c), (a, b, c) ]
-        self.NumVerts = readInt(f)
-        self.NumIndices = readInt(f)
-        self.NumWingedEdges = readInt(f)
-        self.Format = readInt(f)
-        DataOffset = readInt(f)
-        self.DataSize = readInt(f)
-        f.seek(DataOffset)
+    def __init__(self, stream=None):
+        self.reset()
+        if stream:
+            self.from_stream(stream)
 
+    def reset(self):
+        self.positions = None
+        self.normals = None
+        self.color = None
+        self.uv0 = None
+        self.uv1 = None
+        self.uv2 = None
+        self.uv3 = None
+        self.groups = None
+        self.quads = []
+        self.indices = []
 
-    def parseVerticesFormat(self, f):
-        for i in range(self.NumVerts):
-            if self.Format & MESH_HAS_POS:
-                v = struct.unpack("<fff", f.read(12))
-                self.Positions.append(v)
-            if self.Format & MESH_HAS_NORM:
-                v = struct.unpack("<fff", f.read(12))
-                self.Normals.append(v)
-            if self.Format & MESH_HAS_COLOR:
-                (v,) = struct.unpack("<I", f.read(4))
-                self.Colors.append(v)
-            if self.Format & MESH_HAS_UV0:
-                v = struct.unpack("<ff", f.read(8))
-                self.UV0.append(v)
-            if self.Format & MESH_HAS_UV1:
-                v = struct.unpack("<ff", f.read(8))
-                self.UV1.append(v)
-            if self.Format & MESH_HAS_UV2:
-                v = struct.unpack("<ff", f.read(8))
-                self.UV2.append(v)
-            if self.Format & MESH_HAS_UV3:
-                v = struct.unpack("<ff", f.read(8))
-                self.UV3.append(v)
-            if self.Format & MESH_HAS_LINKS:
-                a = struct.unpack("<hhhh", f.read(8))
-                v = struct.unpack("<ffff", f.read(16))
-                self.Groups.append((a, v))
+    def from_stream(self, stream):
+        if 0x4e565831 != stream.read_uint():
+            raise NameError("File is not recognized as .NVX")
+        self.reset()
+        vertex_count = stream.read_uint()
+        index_count = stream.read_uint()
+        winged_edge_count = stream.read_uint()
+        format = stream.read_uint()
+        data_offset = stream.read_uint()
+        data_size = stream.read_uint()
+
+        stream.seek(data_offset)
+        self._read_vertices(format, vertex_count, stream)
+        self._read_quads(winged_edge_count, stream)
+        self._read_indices(index_count, stream)
+
+    def _read_vertices(self, format, length, stream):
+        if format & Mesh.HAS_POS:
+            self.positions = []
+        if format & Mesh.HAS_NORM:
+            self.normals = []
+        if format & Mesh.HAS_COLOR:
+            self.color = []
+        if format & Mesh.HAS_UV0:
+            self.uv0 = []
+        if format & Mesh.HAS_UV1:
+            self.uv1 = []
+        if format & Mesh.HAS_UV2:
+            self.uv2 = []
+        if format & Mesh.HAS_UV3:
+            self.uv3 = []
+        if format & Mesh.HAS_BONE_GROUPS:
+            self.groups = []
         
-    def parseIndexArray(self, f):
-        for i in range(self.NumIndices):
-            tell = f.tell()
-            index = readShort(f)
-            self.Indices.append(index)
+        for _ in range(length):
+            self._read_vertex(format, stream)
 
-    def indicesToTriangles(self, f):
-        indices = self.Indices
-        triangles = int(self.NumIndices / 3)
+    def _read_vertex(self, format, stream):
+        if format & Mesh.HAS_POS:
+            self.positions.append(Vector3(stream=stream))
+        if format & Mesh.HAS_NORM:
+            self.normals.append(Vector3(stream=stream))
+        if format & Mesh.HAS_COLOR:
+            self.color.append(Color(stream=stream))
+        if format & Mesh.HAS_UV0:
+            self.uv0.append(Vector2(stream=stream))
+        if format & Mesh.HAS_UV1:
+            self.uv1.append(Vector2(stream=stream))
+        if format & Mesh.HAS_UV2:
+            self.uv2.append(Vector2(stream=stream))
+        if format & Mesh.HAS_UV3:
+            self.uv3.append(Vector2(stream=stream))
+        if format & Mesh.HAS_BONE_GROUPS:
+            self.groups.append(BoneGroup(stream=stream))
+
+    def _read_quads(self, winged_edge_count, stream):
+        for _ in range(winged_edge_count):
+            self.quads.append(Quad(stream=stream))
+
+    def _read_indices(self, index_count, stream):
+        for _ in range(index_count):
+            self.indices.append(stream.read_ushort())
+
+    def indices_as_triangles(self):
+        triangle_count = int(len(self.indices) / 3)
         result = []
-        for i in range(triangles):
-            index = (indices[i*3+0], indices[i*3+1], indices[i*3+2])
-            result.append(index)
-        self.Indices = result
+        for i in range(triangle_count):
+            result.append(tuple(self.indices[i*3:i*3+3]))
+        return result
 
-    def parseQuads(self, f):
-        result = self.WingedEdges
-        for i in range(self.NumWingedEdges):
-            quad = struct.unpack("<HHHH", f.read(4*2))
-            quad = (quad[0], quad[1], quad[2], quad[3])
-            result.append(quad)
-        self.WingedEdges = result
+def as_data(array):
+    return [d.data() for d in array]
 
-def convert(f):
-    footprint = readInt(f)
-    if 0x4e565831 != footprint:
-        raise NameError("File is not recognized as .NVX")
-    mesh = Mesh(f)
-    mesh.parseVerticesFormat(f)
-    mesh.parseQuads(f)
-    mesh.parseIndexArray(f)
-    mesh.indicesToTriangles(f)
-    return mesh
 
 def assignGroups(mesh, obj):
     if len(mesh.Groups) == 0:
@@ -175,10 +313,16 @@ def assignGroups(mesh, obj):
 
 
 def addMesh(filename, objName):
-    filehandle = open(filename, "rb")
-    mesh = convert(filehandle)
-    filehandle.close()
-    m = bpy.data.meshes.new(objName)
+    
+    with open(filename, "rb") as f:
+        stream = Stream(f)
+        mesh = Mesh(stream=stream)
+
+    mesh_b = bpy.data.meshes.new(objName)
+    mesh_b.from_pydata(mesh.positions, [], mesh.indices_as_triangles())
+
+    """
+
     m.from_pydata(mesh.Positions, [], mesh.Indices)
     if len(mesh.Normals) > 0:
         m.normals_split_custom_set_from_vertices(mesh.Normals)
@@ -197,20 +341,21 @@ def addMesh(filename, objName):
             for i in range(3):
                 bm.faces[fi].loops[i][uv_layer].uv = mesh.UV0[indices[i]]
         bm.to_mesh(m)
+    """
 
     scn = bpy.context.scene
 
     for o in scn.objects:
         o.select = False
-    m.update()
-    m.validate()
-    nobj = bpy.data.objects.new(objName, m)
+    mesh_b.update()
+    mesh_b.validate()
+    nobj = bpy.data.objects.new(objName, mesh_b)
     scn.objects.link(nobj)
     nobj.select = True
 
     if scn.objects.active is None or scn.objects.active.mode == 'OBJECT':
         scn.objects.active = nobj
-    assignGroups(mesh, nobj)
+    #assignGroups(mesh, nobj)
     return nobj
 
 
