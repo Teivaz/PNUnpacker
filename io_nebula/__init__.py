@@ -18,7 +18,40 @@
 
 # <pep8-80 compliant>
 
+bl_info = {
+    "name": "Nebula Machine mesh format (.nvx)",
+    "author": "Teivaz",
+    "version": (0, 2),
+    "blender": (2, 57, 0),
+    "location": "File > Import-Export > Nebula (.nvx) ",
+    "description": "Import-Export Nebula",
+    "warning": "",
+    "wiki_url": ""
+                "",
+    "category": "Import-Export",
+}
 
-if __name__ == "__main__":
-    from .bl_init import register
-    register()
+blender_addon = False
+
+try:
+    import bpy
+    blender_addon = True
+except ImportError:
+    blender_addon = False
+
+if blender_addon:
+    from .import_nvx import NvxImporter
+
+    def menu_import(self, context):
+        self.layout.operator(NvxImporter.bl_idname, text="Nebula mesh (.nvx)")
+        #self.layout.operator(NImporter.bl_idname, text="Nebula script (.n)")
+        #self.layout.operator(NaxImporter.bl_idname, text="Nebula mesh (.nax)")
+        
+    def register():
+        bpy.utils.register_module(__name__)
+        bpy.types.INFO_MT_file_import.append(menu_import)
+
+    def unregister():
+        bpy.utils.unregister_module(__name__)
+        bpy.types.INFO_MT_file_import.remove(menu_import)
+

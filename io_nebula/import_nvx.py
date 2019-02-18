@@ -32,163 +32,28 @@ Notes:
 Generates the standard verts and faces lists.
 """
 
-
+from .stream import InputStream
+from .types import Vector3, Vector2, Color, Quad, BoneGroup
 import bpy, bmesh, struct
+from bpy.props import StringProperty, BoolProperty
 
-class Stream:
-    def __init__(self, stream):
-        self.stream = stream
-    
-    def seek(self, *args, **kwargs):
-        return self.stream.seek(*args, **kwargs)
+class NvxImporter(bpy.types.Operator):
+    bl_idname = "import_mesh.nvx"
+    bl_label = "Import NVX"
+    bl_options = {'UNDO'}
 
-    def read_float(self):
-        (v, ) = struct.unpack("<f", self.stream.read(4))
-        return v
+    filepath = StringProperty(subtype='FILE_PATH')
+    filter_glob = StringProperty(default="*.nvx", options={'HIDDEN'})
 
-    def write_float(self, value):
-        self.stream.write(struct.pack("<f", value))
-    
-    def read_byte(self):
-        (v, ) = struct.unpack("<B", self.stream.read(1))
-        return v
+    def execute(self, context):
+        objName = bpy.path.display_name_from_filepath(self.filepath)
+        addMesh(self.filepath, objName)
+        return {'FINISHED'}
 
-    def write_byte(self, value):
-        self.stream.write(struct.pack("<B", value))
-    
-    def read_ushort(self):
-        (v, ) = struct.unpack("<H", self.stream.read(2))
-        return v
-
-    def write_ushort(self, value):
-        self.stream.write(struct.pack("<H", value))
-    
-    def read_uint(self):
-        (v, ) = struct.unpack("<I", self.stream.read(4))
-        return v
-
-    def write_uint(self, value):
-        self.stream.write(struct.pack("<I", value))
-
-class Vector3:
-    def __init__(self, x=0, y=0, z=0, stream=None):
-        self.x = x
-        self.y = y
-        self.z = z
-        if stream:
-            self.from_stream(stream)
-
-    def __iter__(self):
-        return iter((self.x, self.y, self.z))
-
-    def from_stream(self, stream):
-        self.x = stream.read_float()
-        self.y = stream.read_float()
-        self.z = stream.read_float()
-
-    def to_stream(self, stream):
-        stream.write_float(self.x)
-        stream.write_float(self.y)
-        stream.write_float(self.z)
-
-class Vector2:
-    def __init__(self, x=0, y=0, stream=None):
-        self.x = x
-        self.y = y
-        if stream:
-            self.from_stream(stream)
-
-    def __iter__(self):
-        return iter((self.x, self.y))
-
-    def from_stream(self, stream):
-        self.x = stream.read_float()
-        self.y = stream.read_float()
-
-    def to_stream(self, stream):
-        stream.write_float(self.x)
-        stream.write_float(self.y)
-
-class Color:
-    def __init__(self, r=0, g=0, b=0, a=0, stream=None):
-        self.r = r
-        self.g = g
-        self.b = b
-        self.a = a
-        if stream:
-            self.from_stream(stream)
-
-    def __iter__(self):
-        return iter((self.r, self.g, self.b, self.a))
-
-    def from_stream(self, stream):
-        self.r = stream.read_byte()
-        self.g = stream.read_byte()
-        self.b = stream.read_byte()
-        self.a = stream.read_byte()
-
-    def to_stream(self, stream):
-        stream.write_byte(self.r)
-        stream.write_byte(self.g)
-        stream.write_byte(self.b)
-        stream.write_byte(self.a)
-
-class Quad:
-    def __init__(self, a=0, b=0, c=0, d=0, stream=None):
-        self.a = a
-        self.b = b
-        self.c = c
-        self.d = d
-        if stream:
-            self.from_stream(stream)
-
-    def __iter__(self):
-        return iter((self.a, self.b, self.c, self.d))
-
-    def from_stream(self, stream):
-        self.a = stream.read_ushort()
-        self.b = stream.read_ushort()
-        self.c = stream.read_ushort()
-        self.d = stream.read_ushort()
-
-    def to_stream(self, stream):
-        stream.write_ushort(self.a)
-        stream.write_ushort(self.b)
-        stream.write_ushort(self.c)
-        stream.write_ushort(self.d)
-
-class BoneGroup:
-    def __init__(self, b0=0, b1=0, b2=0, b3=0, w0=0, w1=0, w2=0, w3=0, stream=None):
-        self.b0 = b0
-        self.b1 = b1
-        self.b2 = b2
-        self.b3 = b3
-        self.w0 = w0
-        self.w1 = w1
-        self.w2 = w2
-        self.w3 = w3
-        if stream:
-            self.from_stream(stream)
-
-    def from_stream(self, stream):
-        self.b0 = stream.read_ushort()
-        self.b1 = stream.read_ushort()
-        self.b2 = stream.read_ushort()
-        self.b3 = stream.read_ushort()
-        self.w0 = stream.read_float()
-        self.w1 = stream.read_float()
-        self.w2 = stream.read_float()
-        self.w3 = stream.read_float()
-
-    def to_stream(self, stream):
-        stream.write_ushort(self.b0)
-        stream.write_ushort(self.b1)
-        stream.write_ushort(self.b2)
-        stream.write_ushort(self.b3)
-        stream.write_float(self.w0)
-        stream.write_float(self.w1)
-        stream.write_float(self.w2)
-        stream.write_float(self.w3)
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 class Mesh(object):
@@ -219,7 +84,7 @@ class Mesh(object):
         self.indices = []
 
     def from_stream(self, stream):
-        if 0x4e565831 != stream.read_uint():
+        if "NVX1" != stream.read_tag_name():
             raise NameError("File is not recognized as .NVX")
         self.reset()
         vertex_count = stream.read_uint()
@@ -288,9 +153,6 @@ class Mesh(object):
             result.append(tuple(self.indices[i*3:i*3+3]))
         return result
 
-def as_data(array):
-    return [d.data() for d in array]
-
 
 def assignGroups(mesh, obj):
     if len(mesh.Groups) == 0:
@@ -315,18 +177,21 @@ def assignGroups(mesh, obj):
 def addMesh(filename, objName):
     
     with open(filename, "rb") as f:
-        stream = Stream(f)
+        stream = InputStream(f)
         mesh = Mesh(stream=stream)
 
     mesh_b = bpy.data.meshes.new(objName)
     mesh_b.from_pydata(mesh.positions, [], mesh.indices_as_triangles())
+
+    
+    """
     if mesh.normals:
         mesh_b.normals_split_custom_set_from_vertices(mesh.normals)
 
     if mesh.uv0:
         mesh_b.uv_textures.new("UV0")
         bm = bmesh.new()
-        bm.from_mesh(m)
+        bm.from_mesh(mesh_b)
         uv_layer = bm.loops.layers.uv[0]
         nFaces = len(bm.faces)
         indices = mesh.indices_as_triangles()
@@ -337,7 +202,6 @@ def addMesh(filename, objName):
         bm.to_mesh(mesh_b)
 
 
-    """
 
     hasUV = len(mesh.UV0) > 0
     if hasUV:
@@ -369,11 +233,4 @@ def addMesh(filename, objName):
         scn.objects.active = nobj
     #assignGroups(mesh, nobj)
     return nobj
-
-
-
-def read(filepath):
-    #convert the filename to an object name
-    objName = bpy.path.display_name_from_filepath(filepath)
-    addMesh(filepath, objName)
 

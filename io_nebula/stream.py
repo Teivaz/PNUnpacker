@@ -23,6 +23,10 @@ class InputStream:
 
     def read(self, length):
         return self.stream.read(length)
+    
+    def read_byte(self):
+        (v, ) = struct.unpack("<B", self.stream.read(1))
+        return v
 
     def read_tag_name(self):
         (value, ) = struct.unpack("4s", self.stream.read(4))
@@ -32,14 +36,22 @@ class InputStream:
         (value, ) = struct.unpack("<I", self.stream.read(4))
         return value
 
+    def read_float(self):
+        (v, ) = struct.unpack("<f", self.stream.read(4))
+        return v
+
     def read_short(self):
         (value, ) = struct.unpack("<h", self.stream.read(2))
         return value
+    def read_ushort(self):
+        (v, ) = struct.unpack("<H", self.stream.read(2))
+        return v
 
     def read_string(self):
         size = self.read_short()
         (value, ) = struct.unpack("{}s".format(size), self.stream.read(size))
         return value.decode("iso-8859-1")
+
 
 class OutputStream:
     def __init__(self, stream):
@@ -78,11 +90,19 @@ class OutputStream:
     def write(self, data):
         self.stream.write(data)
 
+    def write_byte(self, value):
+        self.stream.write(struct.pack("<B", value))
+
     def write_uint(self, value):
         self.stream.write(struct.pack("<I", value))
 
+    def write_float(self, value):
+        self.stream.write(struct.pack("<f", value))
+
     def write_short(self, value):
         self.stream.write(struct.pack("<h", value))
+    def write_ushort(self, value):
+        self.stream.write(struct.pack("<H", value))
 
     def wtite_tag_name(self, tag):
         if len(tag) != 4:
@@ -94,4 +114,3 @@ class OutputStream:
         length = len(value)
         self.write_short(length)
         self.stream.write(value)
-
