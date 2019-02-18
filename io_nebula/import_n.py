@@ -35,7 +35,25 @@ Generates the armature bones
 
 import bpy, bmesh, struct
 from mathutils import Vector, Matrix, Quaternion
+from bpy.props import StringProperty
 
+
+class NImporter(bpy.types.Operator):
+    bl_idname = "import_bones.n"
+    bl_label = "Import N"
+    bl_options = {"UNDO"}
+
+    filepath = StringProperty(subtype="FILE_PATH")
+    filter_glob = StringProperty(default="*.n", options={'HIDDEN'})
+
+    def execute(self, context):
+        read(self.filepath)
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {"RUNNING_MODAL"}
 
 def readShort(f):
     (value, ) = struct.unpack("<h", f.read(2))
@@ -180,4 +198,3 @@ def read(filepath):
         createBones(bones, objName)
         print('Creating bones')
     
-#read('d:/projects/islander_old/nvx/_main.n')

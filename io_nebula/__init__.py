@@ -48,18 +48,20 @@ if blender_reload:
     import importlib
     if "bl_nvx" in locals():
         importlib.reload(bl_nvx)
-    #if "import_n" in locals():
-    #    importlib.reload(import_n)
-    #if "import_nax" in locals():
-    #   importlib.reload(import_nax)
+    if "import_n" in locals():
+        importlib.reload(import_n)
+    if "import_nax" in locals():
+       importlib.reload(import_nax)
 
 if blender_addon:
     from . import bl_nvx
+    from . import import_n
+    from . import import_nax
 
     def menu_import(self, context):
         self.layout.operator(bl_nvx.NvxImporter.bl_idname, text="Nebula mesh (.nvx)")
-        #self.layout.operator(NImporter.bl_idname, text="Nebula script (.n)")
-        #self.layout.operator(NaxImporter.bl_idname, text="Nebula mesh (.nax)")
+        self.layout.operator(import_n.NImporter.bl_idname, text="Nebula script (.n)")
+        self.layout.operator(import_nax.NaxImporter.bl_idname, text="Nebula animation (.nax)")
         
     def menu_export(self, context):
         self.layout.operator(bl_nvx.NvxExporter.bl_idname, text="Nebula mesh (.nvx)")

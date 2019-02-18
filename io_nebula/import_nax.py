@@ -33,6 +33,27 @@ Generates animation sequences.
 
 import bpy, bmesh, struct
 from mathutils import Quaternion
+from bpy.props import StringProperty
+
+class NaxImporter(bpy.types.Operator):
+    """Load NAX triangle mesh data"""
+    bl_idname = "import_anim.nax"
+    bl_label = "Import NAX"
+    bl_options = {'UNDO'}
+
+    filepath = StringProperty(subtype='FILE_PATH')
+    filter_glob = StringProperty(default="*.nax", options={'HIDDEN'})
+
+    def execute(self, context):
+        read(self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        wm.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
 
 INTERP_STEP = 0
 INTERP_LINEAR = 1
@@ -225,7 +246,3 @@ def read(filepath):
     #convert the filename to an object name
     objName = bpy.path.display_name_from_filepath(filepath)
     addAnimations(filepath, objName)
-
-
-path = r'e:\other\islander_old\PNUnpacker\nvx\character.nax'
-read(path)
