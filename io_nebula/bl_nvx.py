@@ -27,8 +27,8 @@ class NvxImporter(bpy.types.Operator):
     filter_glob = StringProperty(default="*.nvx", options={"HIDDEN"})
 
     def execute(self, context):
-        objName = bpy.path.display_name_from_filepath(self.filepath)
-        addMesh(self.filepath, objName)
+        object_name = bpy.path.display_name_from_filepath(self.filepath)
+        load_mesh(self.filepath, object_name)
         return {"FINISHED"}
 
     def invoke(self, context, event):
@@ -54,27 +54,7 @@ class NvxExporter(bpy.types.Operator, ExportHelper):
         return {"FINISHED"}
 
 
-def assignGroups(mesh, obj):
-    if len(mesh.Groups) == 0:
-        return
-    linkGroups = {}
-    for i in range(mesh.NumVerts):
-        (groups, weights) = mesh.Groups[i]
-        for l in range(4):
-            group = groups[l]
-            if group == -1:
-                break
-            if group not in linkGroups:
-                linkGroups[group] = []
-            linkGroups[group].append((i, weights[l]))
-    for group, vertices in linkGroups.items():
-        vg = obj.vertex_groups.new(name=str(group))
-        for (index, weight) in vertices:
-            #add index to group with weight
-            vg.add([index], weight, "ADD")
-
-
-def addMesh(filename, objName):
+def load_mesh(filename, objName):
     with open(filename, "rb") as f:
         stream = InputStream(f)
         mesh = Mesh(stream=stream)
@@ -116,6 +96,14 @@ def addMesh(filename, objName):
     if mesh.uv3:
         add_uv(mesh.uv3, "UV3")
 
+    def add_groups(obj):
+        groups = mesh.groups_as_map()
+        for group, vertices in groups.items():
+            vg = obj.vertex_groups.new(name=str(group))
+            for (index, weight) in vertices:
+                #add index to group with weight
+                vg.add([index], weight, "ADD")
+
     bl_mesh.update()
     bl_mesh.validate()
     scn = bpy.context.scene
@@ -128,6 +116,6 @@ def addMesh(filename, objName):
 
     if scn.objects.active is None or scn.objects.active.mode == "OBJECT":
         scn.objects.active = nobj
-    #assignGroups(mesh, nobj)
+    add_groups(nobj)
     return nobj
 

@@ -161,3 +161,23 @@ class Mesh(object):
         for i in range(triangle_count):
             result.append(tuple(self.indices[i*3:i*3+3]))
         return result
+
+
+    def groups_as_map(self):
+        groups = {}
+
+        def assign(vertex_index, group_index, weight):
+            if group_index == -1:
+                return
+            if not group_index in groups:
+                groups[group_index] = []
+            groups[group_index].append((vertex_index, weight))
+
+        for vertex_index in range(len(self.positions)):
+            group = self.groups[vertex_index]
+            assign(vertex_index, group.b0 , group.w0)
+            assign(vertex_index, group.b1 , group.w1)
+            assign(vertex_index, group.b2 , group.w2)
+            assign(vertex_index, group.b3 , group.w3)
+
+        return groups
