@@ -7,8 +7,11 @@ class Vector3:
         if stream:
             self.from_stream(stream)
 
+    def data(self):
+        return (self.x, self.y, self.z)
+
     def __iter__(self):
-        return iter((self.x, self.y, self.z))
+        return iter(self.data())
 
     def from_stream(self, stream):
         self.x = stream.read_float()
@@ -27,8 +30,11 @@ class Vector2:
         if stream:
             self.from_stream(stream)
 
+    def data(self):
+        return (self.x, self.y)
+
     def __iter__(self):
-        return iter((self.x, self.y))
+        return iter(self.data())
 
     def from_stream(self, stream):
         self.x = stream.read_float()

@@ -32,26 +32,45 @@ bl_info = {
 }
 
 blender_addon = False
+blender_reload = False
 
-try:
-    import bpy
+if "bpy" in locals():
     blender_addon = True
-except ImportError:
-    blender_addon = False
+    blender_reload = True
+else:    
+    try:
+        import bpy
+        blender_addon = True
+    except ImportError:
+        blender_addon = False
+
+if blender_reload:
+    import importlib
+    if "bl_nvx" in locals():
+        importlib.reload(bl_nvx)
+    #if "import_n" in locals():
+    #    importlib.reload(import_n)
+    #if "import_nax" in locals():
+    #   importlib.reload(import_nax)
 
 if blender_addon:
-    from .import_nvx import NvxImporter
+    from . import bl_nvx
 
     def menu_import(self, context):
-        self.layout.operator(NvxImporter.bl_idname, text="Nebula mesh (.nvx)")
+        self.layout.operator(bl_nvx.NvxImporter.bl_idname, text="Nebula mesh (.nvx)")
         #self.layout.operator(NImporter.bl_idname, text="Nebula script (.n)")
         #self.layout.operator(NaxImporter.bl_idname, text="Nebula mesh (.nax)")
         
+    def menu_export(self, context):
+        self.layout.operator(bl_nvx.NvxExporter.bl_idname, text="Nebula mesh (.nvx)")
+
     def register():
         bpy.utils.register_module(__name__)
         bpy.types.INFO_MT_file_import.append(menu_import)
+        bpy.types.INFO_MT_file_export.append(menu_export)
 
     def unregister():
         bpy.utils.unregister_module(__name__)
         bpy.types.INFO_MT_file_import.remove(menu_import)
+        bpy.types.INFO_MT_file_export.remove(menu_export)
 
