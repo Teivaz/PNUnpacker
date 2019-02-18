@@ -320,12 +320,24 @@ def addMesh(filename, objName):
 
     mesh_b = bpy.data.meshes.new(objName)
     mesh_b.from_pydata(mesh.positions, [], mesh.indices_as_triangles())
+    if mesh.normals:
+        mesh_b.normals_split_custom_set_from_vertices(mesh.normals)
+
+    if mesh.uv0:
+        mesh_b.uv_textures.new("UV0")
+        bm = bmesh.new()
+        bm.from_mesh(m)
+        uv_layer = bm.loops.layers.uv[0]
+        nFaces = len(bm.faces)
+        indices = mesh.indices_as_triangles()
+        for fi in range(nFaces):
+            index = indices[fi]
+            for i in range(3):
+                bm.faces[fi].loops[i][uv_layer].uv = mesh.UV0[indices[i]]
+        bm.to_mesh(mesh_b)
+
 
     """
-
-    m.from_pydata(mesh.Positions, [], mesh.Indices)
-    if len(mesh.Normals) > 0:
-        m.normals_split_custom_set_from_vertices(mesh.Normals)
 
     hasUV = len(mesh.UV0) > 0
     if hasUV:
