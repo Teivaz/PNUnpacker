@@ -12,7 +12,9 @@ Notes:
 Generates the standard verts and faces lists.
 """
 
-from .stream import InputStream
+from contextlib import contextmanager
+from .stream import InputStream, OutputStream
+from .types import Vector3
 from .nvx import Mesh
 import bpy, bmesh, struct
 from bpy.props import StringProperty, BoolProperty
@@ -42,7 +44,7 @@ class NvxExporter(bpy.types.Operator, ExportHelper):
     bl_options = {"UNDO"}
 
     filename_ext = ".nvx"
-    filter_glob = StringProperty(default="*.nvx", options={"HIDDEN"})
+    filepath = StringProperty(subtype="FILE_PATH")
 
     use_selection = BoolProperty(
             name="Selection Only",
@@ -51,15 +53,64 @@ class NvxExporter(bpy.types.Operator, ExportHelper):
             )
 
     def execute(self, context):
+        file_path = bpy.path.ensure_ext(self.filepath, ".nvx")
+        scene = context.scene
+        objects = (ob for ob in scene.objects if ob.is_visible(scene) and ob.select and ob.type in ("MESH"))
+        if objects:
+            save_mesh(file_path, next(objects))
         return {"FINISHED"}
 
+    def invoke(self, context, event):
+        if not self.filepath:
+            self.filepath = bpy.path.ensure_ext(bpy.data.filepath, ".nvx")
+        WindowManager = context.window_manager
+        WindowManager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
-def load_mesh(filename, objName):
+
+@contextmanager
+def triangulated_mesh(obj):
+    bl_mesh = bmesh.new()
+    bl_mesh.from_mesh(obj.data)
+    bmesh.ops.triangulate(bl_mesh, faces=bl_mesh.faces[:], quad_method=0, ngon_method=0)
+    mesh = bpy.data.meshes.new(obj.name+"_triangulated")
+    bl_mesh.to_mesh(mesh)
+    bl_mesh.free()
+    yield mesh
+    bpy.data.meshes.remove(mesh)
+
+
+def save_mesh(filename, bl_object):
+    mesh = Mesh()
+
+    has_custom_normals = bl_object.data.has_custom_normals
+
+    with triangulated_mesh(bl_object) as bl_mesh:
+        bl_mesh = bl_object.data
+        mesh.positions = []
+        for v in bl_mesh.vertices:
+            mesh.positions.insert(v.index, Vector3(*v.co[:]))
+        
+        if has_custom_normals:
+            mesh.normals = []
+            bl_mesh.calc_normals_split()
+
+        for l in bl_mesh.loops:
+            mesh.indices.append(l.vertex_index)
+            if has_custom_normals:
+                mesh.normals.insert(l.vertex_index, Vector3(*l.normal[:]))
+
+        with open(filename, "wb") as f:
+            stream = OutputStream(f)
+            mesh.to_stream(stream)
+
+
+def load_mesh(filename, object_name):
     with open(filename, "rb") as f:
         stream = InputStream(f)
         mesh = Mesh(stream=stream)
 
-    bl_mesh = bpy.data.meshes.new(objName)
+    bl_mesh = bpy.data.meshes.new(object_name)
     bl_mesh.from_pydata(mesh.positions, [], mesh.indices_as_triangles())
     
     if mesh.normals:
@@ -110,7 +161,7 @@ def load_mesh(filename, objName):
 
     for o in scn.objects:
         o.select = False
-    nobj = bpy.data.objects.new(objName, bl_mesh)
+    nobj = bpy.data.objects.new(object_name, bl_mesh)
     scn.objects.link(nobj)
     nobj.select = True
 
