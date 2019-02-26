@@ -14,7 +14,7 @@ class Vector3:
         return iter(self.data())
 
     def __repr__(self):
-        return ", ".join(["{:.3}".format(e) for e in [*self]])
+        return "(" + ", ".join(["{:.3}".format(e) for e in [*self]]) + ")"
 
     def from_stream(self, stream):
         self.x = stream.read_float()
@@ -40,7 +40,7 @@ class Vector2:
         return iter(self.data())
 
     def __repr__(self):
-        return ", ".join(["{:.3}".format(e) for e in [*self]])
+        return "(" + ", ".join(["{:.3}".format(e) for e in [*self]]) + ")"
 
     def from_stream(self, stream):
         self.x = stream.read_float()
@@ -63,7 +63,7 @@ class Color:
         return iter((self.r, self.g, self.b, self.a))
 
     def __repr__(self):
-        return ", ".join(["{:02X}".format(e) for e in [*self]])
+        return "(" + " ".join(["0x{:02x}".format(e) for e in [*self]]) + ")"
 
     def from_stream(self, stream):
         self.r = stream.read_byte()
@@ -90,7 +90,7 @@ class Quad:
         return iter((self.a, self.b, self.c, self.d))
 
     def __repr__(self):
-        return ", ".join(["{:02X}".format(e) for e in [*self]])
+        return "(" + ", ".join(["{}".format(e) for e in [*self]]) + ")"
 
     def from_stream(self, stream):
         self.a = stream.read_ushort()
@@ -118,23 +118,23 @@ class BoneGroup:
             self.from_stream(stream)
 
     def __repr__(self):
-        return "{.b0}:{.w0:.2} {.b1}:{.w1:.2} {.b2}:{.w2:.2} {.b3}:{.w3:.2}".format(self)
+        return "({0.b0}:{0.w0:.2}, {0.b1}:{0.w1:.2}, {0.b2}:{0.w2:.2}, {0.b3}:{0.w3:.2})".format(self)
 
     def from_stream(self, stream):
-        self.b0 = stream.read_ushort()
-        self.b1 = stream.read_ushort()
-        self.b2 = stream.read_ushort()
-        self.b3 = stream.read_ushort()
+        self.b0 = stream.read_short()
+        self.b1 = stream.read_short()
+        self.b2 = stream.read_short()
+        self.b3 = stream.read_short()
         self.w0 = stream.read_float()
         self.w1 = stream.read_float()
         self.w2 = stream.read_float()
         self.w3 = stream.read_float()
 
     def to_stream(self, stream):
-        stream.write_ushort(self.b0)
-        stream.write_ushort(self.b1)
-        stream.write_ushort(self.b2)
-        stream.write_ushort(self.b3)
+        stream.write_short(self.b0)
+        stream.write_short(self.b1)
+        stream.write_short(self.b2)
+        stream.write_short(self.b3)
         stream.write_float(self.w0)
         stream.write_float(self.w1)
         stream.write_float(self.w2)

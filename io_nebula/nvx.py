@@ -167,7 +167,7 @@ class Mesh(object):
         groups = {}
 
         def assign(vertex_index, group_index, weight):
-            if group_index == 65535:
+            if group_index == -1:
                 return
             if not group_index in groups:
                 groups[group_index] = []
