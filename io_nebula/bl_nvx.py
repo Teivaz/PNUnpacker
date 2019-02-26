@@ -87,18 +87,19 @@ def save_mesh(filename, bl_object):
 
     with triangulated_mesh(bl_object) as bl_mesh:
         bl_mesh = bl_object.data
-        mesh.positions = []
+        total_vertices = len(bl_mesh.vertices)
+        mesh.positions = [Vector3()] * total_vertices
         for v in bl_mesh.vertices:
-            mesh.positions.insert(v.index, Vector3(*v.co[:]))
+            mesh.positions[v.index] = Vector3(*v.co[:])
         
         if has_custom_normals:
-            mesh.normals = []
+            mesh.normals = [Vector3()] * total_vertices
             bl_mesh.calc_normals_split()
 
         for l in bl_mesh.loops:
             mesh.indices.append(l.vertex_index)
             if has_custom_normals:
-                mesh.normals.insert(l.vertex_index, Vector3(*l.normal[:]))
+                mesh.normals[l.vertex_index] = Vector3(*l.normal[:])
 
         with open(filename, "wb") as f:
             stream = OutputStream(f)
