@@ -13,6 +13,9 @@ class Vector3:
     def __iter__(self):
         return iter(self.data())
 
+    def __repr__(self):
+        return ", ".join(["{:.3}".format(e) for e in [*self]])
+
     def from_stream(self, stream):
         self.x = stream.read_float()
         self.y = stream.read_float()
@@ -36,6 +39,9 @@ class Vector2:
     def __iter__(self):
         return iter(self.data())
 
+    def __repr__(self):
+        return ", ".join(["{:.3}".format(e) for e in [*self]])
+
     def from_stream(self, stream):
         self.x = stream.read_float()
         self.y = stream.read_float()
@@ -55,6 +61,9 @@ class Color:
 
     def __iter__(self):
         return iter((self.r, self.g, self.b, self.a))
+
+    def __repr__(self):
+        return ", ".join(["{:02X}".format(e) for e in [*self]])
 
     def from_stream(self, stream):
         self.r = stream.read_byte()
@@ -80,6 +89,9 @@ class Quad:
     def __iter__(self):
         return iter((self.a, self.b, self.c, self.d))
 
+    def __repr__(self):
+        return ", ".join(["{:02X}".format(e) for e in [*self]])
+
     def from_stream(self, stream):
         self.a = stream.read_ushort()
         self.b = stream.read_ushort()
@@ -104,6 +116,9 @@ class BoneGroup:
         self.w3 = w3
         if stream:
             self.from_stream(stream)
+
+    def __repr__(self):
+        return "{.b0}:{.w0:.2} {.b1}:{.w1:.2} {.b2}:{.w2:.2} {.b3}:{.w3:.2}".format(self)
 
     def from_stream(self, stream):
         self.b0 = stream.read_ushort()
