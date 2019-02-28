@@ -1,5 +1,6 @@
 import struct
 from .errors import StreamError
+from contextlib import contextmanager
 
 class InputStream:
     def __init__(self, stream):
@@ -13,6 +14,12 @@ class InputStream:
 
     def skip(self, length):
         self.stream.seek(length, 1)
+
+    @contextmanager
+    def push(self):
+        pos = self.tell()
+        yield self
+        self.seek(pos, 0)
 
     def __len__(self):
         current = self.stream.tell()

@@ -1,7 +1,7 @@
 
 from .types import Vector3, Vector2, Color, Quad, BoneGroup
 
-class Mesh(object):
+class NvxFlags:
     HAS_POS = 0b00000001 # has xyz
     HAS_NORM = 0b00000010 # has normals
     HAS_COLOR = 0b00000100 # has color
@@ -12,6 +12,7 @@ class Mesh(object):
     HAS_BONE_GROUPS = 0b10000000 # has joint indices for skinning and weights
 
 
+class Mesh(object):
     def __init__(self, stream=None):
         self.reset()
         if stream:
@@ -33,14 +34,14 @@ class Mesh(object):
 
     def get_format(self):
         return int(
-            (bool(self.positions) and Mesh.HAS_POS) |
-            (bool(self.normals) and Mesh.HAS_NORM) |
-            (bool(self.color) and Mesh.HAS_COLOR) |
-            (bool(self.uv0) and Mesh.HAS_UV0) |
-            (bool(self.uv1) and Mesh.HAS_UV1) |
-            (bool(self.uv2) and Mesh.HAS_UV2) |
-            (bool(self.uv3) and Mesh.HAS_UV3) |
-            (bool(self.groups) and Mesh.HAS_BONE_GROUPS)
+            (bool(self.positions) and NvxFlags.HAS_POS) |
+            (bool(self.normals) and NvxFlags.HAS_NORM) |
+            (bool(self.color) and NvxFlags.HAS_COLOR) |
+            (bool(self.uv0) and NvxFlags.HAS_UV0) |
+            (bool(self.uv1) and NvxFlags.HAS_UV1) |
+            (bool(self.uv2) and NvxFlags.HAS_UV2) |
+            (bool(self.uv3) and NvxFlags.HAS_UV3) |
+            (bool(self.groups) and NvxFlags.HAS_BONE_GROUPS)
         )
 
 
@@ -84,28 +85,28 @@ class Mesh(object):
 
     def _read_vertices(self, format, length, stream):
         read_functions = []
-        if format & Mesh.HAS_POS:
+        if format & NvxFlags.HAS_POS:
             self.positions = []
             read_functions.append(lambda: self.positions.append(Vector3(stream=stream)))
-        if format & Mesh.HAS_NORM:
+        if format & NvxFlags.HAS_NORM:
             self.normals = []
             read_functions.append(lambda: self.normals.append(Vector3(stream=stream)))
-        if format & Mesh.HAS_COLOR:
+        if format & NvxFlags.HAS_COLOR:
             self.color = []
             read_functions.append(lambda: self.color.append(Color(stream=stream)))
-        if format & Mesh.HAS_UV0:
+        if format & NvxFlags.HAS_UV0:
             self.uv0 = []
             read_functions.append(lambda: self.uv0.append(Vector2(stream=stream)))
-        if format & Mesh.HAS_UV1:
+        if format & NvxFlags.HAS_UV1:
             self.uv1 = []
             read_functions.append(lambda: self.uv1.append(Vector2(stream=stream)))
-        if format & Mesh.HAS_UV2:
+        if format & NvxFlags.HAS_UV2:
             self.uv2 = []
             read_functions.append(lambda: self.uv2.append(Vector2(stream=stream)))
-        if format & Mesh.HAS_UV3:
+        if format & NvxFlags.HAS_UV3:
             self.uv3 = []
             read_functions.append(lambda: self.uv3.append(Vector2(stream=stream)))
-        if format & Mesh.HAS_BONE_GROUPS:
+        if format & NvxFlags.HAS_BONE_GROUPS:
             self.groups = []
             read_functions.append(lambda: self.groups.append(BoneGroup(stream=stream)))
         
